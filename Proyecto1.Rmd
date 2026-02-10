@@ -1,0 +1,6 @@
+---
+title: "Proyecto 1"
+author: " Grupo 6 "
+date: "`r Sys.Date()`"
+output: html_document
+---
