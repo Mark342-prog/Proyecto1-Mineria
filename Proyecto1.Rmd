@@ -4,3 +4,22 @@ author: " Grupo 6 "
 date: "`r Sys.Date()`"
 output: html_document
 ---
+
+```{r load}
+library(haven)
+library(dplyr)
+
+archivos <- list.files("Datos", pattern = "\\.sav$", full.names = TRUE)
+
+lista_datos <- lapply(archivos, function(x) {
+  df <- read_sav(x)
+  df <- zap_labels(df)
+  df[] <- lapply(df, as.character)
+  df
+})
+
+datos_unidos <- bind_rows(lista_datos)
+
+View(datos_unidos)
+
+```
