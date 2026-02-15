@@ -3,8 +3,8 @@ title: "Proyecto 1 – Maternidad Adolescente en Guatemala (2009–2023)"
 author: "Grupo 6"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -241,12 +241,88 @@ fviz_silhouette(sil)
 
 ---
 
-# 11. Conclusiones
+# 11. Interpretación de Resultados
 
-- Se identificó la tendencia temporal de la maternidad adolescente.
-- Se evaluaron diferencias entre áreas urbanas y rurales.
-- Se evidenció relación estructural con nivel educativo.
-- Se detectaron departamentos con patrones extremos.
-- El clustering permitió identificar agrupamientos territoriales con características demográficas similares.
+## Evolución temporal de la maternidad adolescente
 
-Estos resultados permiten comprender la estructura territorial del fenómeno en Guatemala.
+El análisis de la proporción anual de nacimientos en madres menores de 18 años muestra un comportamiento no lineal durante el período 2009–2023.
+
+Se observa un incremento progresivo entre 2009 y 2012, alcanzando un punto máximo cercano al 10.7%. A partir de 2013 se identifica una tendencia descendente relativamente sostenida, con una caída más marcada en 2020 (aproximadamente 7.3%). Este descenso podría estar asociado a cambios estructurales en políticas públicas o a efectos indirectos derivados de la pandemia.
+
+En 2023 se observa un leve repunte, lo cual sugiere que el fenómeno no ha desaparecido y mantiene cierta persistencia estructural.
+
+En términos generales, la tendencia indica una reducción moderada respecto al pico observado en 2012, aunque la proporción continúa siendo significativa.
+
+---
+
+## Comparación Urbano vs Rural
+
+Contrario a lo que suele asumirse, la diferencia entre áreas urbanas y rurales es mínima:
+
+- Urbano: 9.53%
+- Rural: 9.49%
+
+Esto sugiere que la maternidad adolescente no es un fenómeno exclusivamente rural, sino que se presenta con intensidad similar en ambos contextos. El fenómeno parece responder a factores estructurales más complejos que trascienden la simple división territorial.
+
+---
+
+## Relación con Nivel Educativo
+
+El análisis por nivel educativo muestra un patrón claro y estructural:
+
+- Nivel educativo bajo: 12.6%
+- Nivel intermedio: 3.28%
+- Nivel alto: 1.43%
+
+Se observa una relación inversa fuerte entre educación y maternidad adolescente. A menor nivel educativo, mayor proporción de maternidad temprana.
+
+Este resultado evidencia que el nivel educativo es uno de los factores más determinantes asociados al fenómeno.
+
+---
+
+## Departamentos con Patrones Extremos
+
+El análisis territorial permitió identificar departamentos con proporciones significativamente mayores y menores de maternidad adolescente.
+
+Algunos departamentos superan el 12%, mientras que otros se encuentran por debajo del 5%. Estas diferencias reflejan desigualdades estructurales territoriales asociadas a condiciones socioeducativas y demográficas.
+
+---
+
+# 12. Clustering Territorial
+
+Para profundizar en la estructura territorial del fenómeno, se construyó un dataset agregado por departamento incorporando:
+
+- Proporción de maternidad adolescente
+- Proporción de ruralidad
+- Edad promedio materna
+- Proporción de baja educación
+
+Tras estandarizar las variables y aplicar el algoritmo K-means con k = 3, se identificaron tres grupos territoriales diferenciados. El índice promedio de silhouette fue 0.42, lo cual indica una estructura de agrupamiento aceptable.
+
+## Interpretación de los Clusters
+
+**Cluster 1 – Alta ruralidad y perfil intermedio**
+
+Departamentos con alta proporción rural y niveles intermedios de maternidad adolescente.
+
+**Cluster 2 – Perfil urbano con menor maternidad adolescente**
+
+Departamentos con menor ruralidad y menores proporciones de maternidad adolescente.
+
+**Cluster 3 – Alta vulnerabilidad estructural**
+
+Departamentos con mayor proporción de maternidad adolescente y mayor proporción de baja educación.
+
+---
+
+# 13. Conclusión General
+
+El análisis realizado permite concluir que:
+
+1. La maternidad adolescente mostró un incremento inicial hasta 2012 y posteriormente una tendencia descendente.
+2. La diferencia urbano-rural es menor a la esperada.
+3. El nivel educativo presenta una relación estructural clara con la maternidad temprana.
+4. Existen diferencias territoriales significativas entre departamentos.
+5. El clustering confirma la existencia de perfiles territoriales diferenciados.
+
+Las preguntas de investigación planteadas fueron respondidas mediante el análisis exploratorio y el agrupamiento territorial realizado.
