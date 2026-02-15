@@ -1,0 +1,99 @@
+---
+title: "Avances1_DescGeneral"
+output: html_document
+date: "2026-02-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Proyecto. Avances 1. EDA y Clustering - old
+## Descripción General del conjunto de datos
+## Significado y tipo de cada una de las variables
+El conjunto de datos pertenece a los registros de nacimientos del Instituto Nacional de Estadística (INE) de Guatemala, integrando múltiples años en un único conjunto de datos consolidado.
+Según lo visto y analizado en los archivos, se encuentra lo siguiente:
+
+- Número total de observaciones: 5,195,195 registros
+- Número de variables originales: 61
+- Número de variables después de limpieza: 47
+- Periodo aproximado: 2009–2023
+
+
+La limpieza que se menciona incluye los siguientes cambios:
+
+- Conversión de valores "Ignorado" a NA.
+- Conversión de variables numéricas almacenadas como texto a tipo numérico.
+- Eliminación de variables con más del 80% de valores faltantes.
+
+
+Table: Descripción de las principales variables
+
+|Variable |Descripcion                      |Tipo       |
+|:--------|:--------------------------------|:----------|
+|Depreg   |Departamento de registro         |Categórica |
+|Mesreg   |Mes de registro                  |Categórica |
+|Añoreg   |Año de registro                  |Numérica   |
+|Sexo     |Sexo del recién nacido           |Categórica |
+|Edadp    |Edad del padre                   |Numérica   |
+|Edadm    |Edad de la madre                 |Numérica   |
+|Libras   |Peso del recién nacido en libras |Numérica   |
+|Onzas    |Peso adicional en onzas          |Numérica   |
+|Tipar    |Tipo de parto                    |Categórica |
+|Asisrec  |Tipo de asistencia recibida      |Categórica |
+
+
+
+## Cantidad de variables
+El conjunto de datos ya filtrados, limpiados y depurados, contiene un total de 47 variables. Inicialmente contenía 61 variables, pero se eliminaron las que contenían más del 80% de valores faltantes para realizar un análisis de mejor calidad.
+
+
+## Cantidad de observaciones
+El conjunto de datos contiene 5,195,195 observaciones, estos corresponden a registros individuales de nacimientos en Guatemala durante los años 2009-2023.
+
+
+## Observaciones a tomar en cuenta
+- Existen valores faltantes que en los archivos originales se etiquetaban como "Ignorado"
+- Existen valores atípicos en variables numéricas como las edades registradas como 999.
+- Las diferencias estructurales entre los años requirieron la consolidación de un tipo de dato estándar para permitir el análisis conjunto.
+
+## Comandos en Consola (ignorar)
+```{r registro-comandos, eval=FALSE}
+# REGISTRO DE COMANDOS UTILIZADOS
+
+library(haven)
+library(dplyr)
+
+archivos <- list.files("Datos", pattern = "\\.sav$", full.names = TRUE)
+
+lista_datos <- lapply(archivos, function(x) {
+  df <- read_sav(x)
+  df <- haven::as_factor(df)
+  df <- mutate(df, across(everything(), as.character))
+  return(df)
+})
+
+datos_unidos <- bind_rows(lista_datos)
+
+datos_unidos <- datos_unidos %>%
+  mutate(across(everything(), ~na_if(., "Ignorado")))
+
+datos_unidos <- datos_unidos %>%
+  mutate(
+    Libras = as.numeric(Libras),
+    Onzas = as.numeric(Onzas),
+    Diaocu = as.numeric(Diaocu),
+    Añoreg = as.numeric(Añoreg),
+    Añoocu = as.numeric(Añoocu),
+    Edadp = as.numeric(Edadp),
+    Edadm = as.numeric(Edadm),
+    Tohite = as.numeric(Tohite),
+    Tohinm = as.numeric(Tohinm),
+    Tohivi = as.numeric(Tohivi)
+  )
+
+porcentaje_na <- colMeans(is.na(datos_unidos))
+datos_unidos <- datos_unidos[, porcentaje_na < 0.8]
+
+numericas <- datos_unidos %>% select(where(is.numeric))
+categoricas <- datos_unidos %>% select(where(~!is.numeric(.)))
