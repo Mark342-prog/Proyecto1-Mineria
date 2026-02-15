@@ -1,13 +1,32 @@
 ---
-title: "Proyecto 1"
-author: " Grupo 6 "
+title: "Proyecto 1 – Maternidad Adolescente en Guatemala (2009–2023)"
+author: "Grupo 6"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
-```{r load}
+# 1. Introducción
+
+Guatemala presenta históricamente altas tasas de maternidad adolescente, fenómeno asociado a desigualdades territoriales y educativas.
+
+El presente proyecto analiza la evolución y distribución territorial de los nacimientos en madres menores de 18 años utilizando datos oficiales del INE correspondientes al período 2009–2023.
+
+Preguntas de investigación:
+
+- ¿Ha disminuido o aumentado la proporción de nacimientos en madres menores de 18 años entre 2009 y 2023?
+- ¿Se concentra más en áreas rurales?
+- ¿Existe relación entre nivel educativo y maternidad temprana?
+- ¿Hay departamentos con patrones extremos?
+- ¿El fenómeno presenta agrupamiento territorial?
+
+# 2. Carga y Unión de Datos
+
+```{r carga_datos}
 library(haven)
 library(dplyr)
+library(ggplot2)
 
 archivos <- list.files("Datos", pattern = "\\.sav$", full.names = TRUE)
 
@@ -20,6 +39,120 @@ lista_datos <- lapply(archivos, function(x) {
 
 datos_unidos <- bind_rows(lista_datos)
 
-View(datos_unidos)
-
+length(archivos)
+dim(datos_unidos)
 ```
+
+# 3. Preparación y Limpieza de Variables
+
+## Corrección de la variable año
+
+```{r year_fix}
+datos_unidos$Añoreg <- ifelse(nchar(datos_unidos$Añoreg) == 1,
+                              paste0("200", datos_unidos$Añoreg),
+                              ifelse(nchar(datos_unidos$Añoreg) == 2,
+                                     paste0("20", datos_unidos$Añoreg),
+                                     datos_unidos$Añoreg))
+
+datos_unidos$Añoreg <- as.numeric(datos_unidos$Añoreg)
+
+table(datos_unidos$Añoreg)
+```
+
+## Limpieza de edad materna
+
+```{r clean_age}
+datos_unidos$Edadm <- as.numeric(datos_unidos$Edadm)
+datos_unidos$Edadm[datos_unidos$Edadm == 999] <- NA
+summary(datos_unidos$Edadm)
+```
+
+## Creación de variable binaria
+
+```{r adolescente}
+datos_unidos$adolescente <- ifelse(datos_unidos$Edadm < 18, 1, 0)
+table(datos_unidos$adolescente)
+```
+
+# 4. Análisis Exploratorio
+
+## 4.1 Distribución de Edad Materna
+
+```{r dist_edad}
+summary(datos_unidos$Edadm)
+
+ggplot(datos_unidos, aes(x = Edadm)) +
+  geom_histogram(bins = 30) +
+  labs(title = "Distribución de Edad Materna",
+       x = "Edad",
+       y = "Frecuencia")
+```
+
+## 4.2 Evolución Temporal de la Maternidad Adolescente
+
+```{r evolucion}
+prop_anual <- datos_unidos %>%
+  group_by(Añoreg) %>%
+  summarise(prop_adolescente = mean(adolescente, na.rm = TRUE))
+
+prop_anual
+
+ggplot(prop_anual, aes(x = Añoreg, y = prop_adolescente)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Evolución de la Proporción de Maternidad Adolescente",
+       x = "Año",
+       y = "Proporción")
+```
+
+## 4.3 Comparación Urbano vs Rural
+
+```{r urbano_rural}
+datos_unidos$Areag <- as.numeric(datos_unidos$Areag)
+datos_unidos$Areag[datos_unidos$Areag == 9] <- NA
+
+prop_area <- datos_unidos %>%
+  group_by(Areag) %>%
+  summarise(prop_adolescente = mean(adolescente, na.rm = TRUE))
+
+prop_area
+```
+
+## 4.4 Nivel Educativo y Maternidad Adolescente
+
+```{r educacion}
+datos_unidos$Escivm <- as.numeric(datos_unidos$Escivm)
+datos_unidos$Escivm[datos_unidos$Escivm == 9] <- NA
+
+prop_educ <- datos_unidos %>%
+  group_by(Escivm) %>%
+  summarise(prop_adolescente = mean(adolescente, na.rm = TRUE))
+
+prop_educ
+```
+
+## 4.5 Departamentos con Patrones Extremos
+
+```{r deptos}
+datos_unidos$Deprem <- as.numeric(datos_unidos$Deprem)
+datos_unidos$Deprem[datos_unidos$Deprem == 99] <- NA
+
+prop_depto <- datos_unidos %>%
+  group_by(Deprem) %>%
+  summarise(prop_adolescente = mean(adolescente, na.rm = TRUE)) %>%
+  arrange(desc(prop_adolescente))
+
+head(prop_depto)
+tail(prop_depto)
+```
+
+# 5. Hallazgos del Análisis Exploratorio
+
+En esta sección se deben discutir:
+
+- Tendencia temporal observada.
+- Diferencias urbano-rurales.
+- Relación con nivel educativo.
+- Departamentos con mayor y menor proporción de maternidad adolescente.
+
+Estos resultados permiten comprender la estructura del fenómeno antes de aplicar técnicas de agrupamiento territorial.
