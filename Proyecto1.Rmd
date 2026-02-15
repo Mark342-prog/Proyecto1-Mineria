@@ -7,11 +7,15 @@ output:
   html_document: default
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 # 1. Introducción
 
 Guatemala presenta históricamente altas tasas de maternidad adolescente, fenómeno asociado a desigualdades territoriales y educativas.
 
-El presente proyecto analiza la evolución y distribución territorial de los nacimientos en madres menores de 18 años utilizando datos oficiales del INE correspondientes al período 2009–2023.
+Este proyecto analiza la evolución y distribución territorial de los nacimientos en madres menores de 18 años utilizando registros oficiales del Instituto Nacional de Estadística (INE) correspondientes al período 2009–2023.
 
 Preguntas de investigación:
 
@@ -21,12 +25,36 @@ Preguntas de investigación:
 - ¿Hay departamentos con patrones extremos?
 - ¿El fenómeno presenta agrupamiento territorial?
 
-# 2. Carga y Unión de Datos
+---
+
+# 2. Descripción General del Conjunto de Datos
+
+El conjunto de datos corresponde a registros individuales de nacimientos del INE.
+
+- Número total de observaciones: 5,195,195
+- Número de variables originales: 61
+- Periodo: 2009–2023
+
+Principales variables utilizadas:
+
+| Variable | Descripción | Tipo |
+|----------|------------|------|
+| Añoreg | Año de registro | Numérica |
+| Edadm | Edad de la madre | Numérica |
+| Areag | Área geográfica (1=Urbano, 2=Rural) | Categórica |
+| Escivm | Nivel educativo madre | Categórica |
+| Deprem | Departamento de residencia | Categórica |
+
+---
+
+# 3. Carga y Unión de Datos
 
 ```{r carga_datos}
 library(haven)
 library(dplyr)
 library(ggplot2)
+library(cluster)
+library(factoextra)
 
 archivos <- list.files("Datos", pattern = "\\.sav$", full.names = TRUE)
 
@@ -43,9 +71,11 @@ length(archivos)
 dim(datos_unidos)
 ```
 
-# 3. Preparación y Limpieza de Variables
+---
 
-## Corrección de la variable año
+# 4. Limpieza y Preparación
+
+## Corrección del año
 
 ```{r year_fix}
 datos_unidos$Añoreg <- ifelse(nchar(datos_unidos$Añoreg) == 1,
@@ -55,32 +85,31 @@ datos_unidos$Añoreg <- ifelse(nchar(datos_unidos$Añoreg) == 1,
                                      datos_unidos$Añoreg))
 
 datos_unidos$Añoreg <- as.numeric(datos_unidos$Añoreg)
-
 table(datos_unidos$Añoreg)
 ```
 
 ## Limpieza de edad materna
 
-```{r clean_age}
+```{r edad_limpia}
 datos_unidos$Edadm <- as.numeric(datos_unidos$Edadm)
 datos_unidos$Edadm[datos_unidos$Edadm == 999] <- NA
 summary(datos_unidos$Edadm)
 ```
 
-## Creación de variable binaria
+## Variable maternidad adolescente
 
 ```{r adolescente}
 datos_unidos$adolescente <- ifelse(datos_unidos$Edadm < 18, 1, 0)
 table(datos_unidos$adolescente)
 ```
 
-# 4. Análisis Exploratorio
+---
 
-## 4.1 Distribución de Edad Materna
+# 5. Análisis Exploratorio
+
+## 5.1 Distribución de Edad Materna
 
 ```{r dist_edad}
-summary(datos_unidos$Edadm)
-
 ggplot(datos_unidos, aes(x = Edadm)) +
   geom_histogram(bins = 30) +
   labs(title = "Distribución de Edad Materna",
@@ -88,56 +117,65 @@ ggplot(datos_unidos, aes(x = Edadm)) +
        y = "Frecuencia")
 ```
 
-## 4.2 Evolución Temporal de la Maternidad Adolescente
+---
+
+## 5.2 Evolución Temporal
 
 ```{r evolucion}
 prop_anual <- datos_unidos %>%
   group_by(Añoreg) %>%
   summarise(prop_adolescente = mean(adolescente, na.rm = TRUE))
 
-prop_anual
-
 ggplot(prop_anual, aes(x = Añoreg, y = prop_adolescente)) +
   geom_line() +
   geom_point() +
-  labs(title = "Evolución de la Proporción de Maternidad Adolescente",
+  labs(title = "Evolución de la Maternidad Adolescente",
        x = "Año",
        y = "Proporción")
 ```
 
-## 4.3 Comparación Urbano vs Rural
+---
 
-```{r urbano_rural}
+## 5.3 Urbano vs Rural
+
+```{r ruralidad}
 datos_unidos$Areag <- as.numeric(datos_unidos$Areag)
 datos_unidos$Areag[datos_unidos$Areag == 9] <- NA
 
 prop_area <- datos_unidos %>%
+  filter(!is.na(Areag)) %>%
   group_by(Areag) %>%
   summarise(prop_adolescente = mean(adolescente, na.rm = TRUE))
 
 prop_area
 ```
 
-## 4.4 Nivel Educativo y Maternidad Adolescente
+---
+
+## 5.4 Nivel Educativo
 
 ```{r educacion}
 datos_unidos$Escivm <- as.numeric(datos_unidos$Escivm)
 datos_unidos$Escivm[datos_unidos$Escivm == 9] <- NA
 
 prop_educ <- datos_unidos %>%
+  filter(!is.na(Escivm)) %>%
   group_by(Escivm) %>%
   summarise(prop_adolescente = mean(adolescente, na.rm = TRUE))
 
 prop_educ
 ```
 
-## 4.5 Departamentos con Patrones Extremos
+---
+
+## 5.5 Departamentos con Patrones Extremos
 
 ```{r deptos}
 datos_unidos$Deprem <- as.numeric(datos_unidos$Deprem)
 datos_unidos$Deprem[datos_unidos$Deprem == 99] <- NA
 
 prop_depto <- datos_unidos %>%
+  filter(!is.na(Deprem)) %>%
   group_by(Deprem) %>%
   summarise(prop_adolescente = mean(adolescente, na.rm = TRUE)) %>%
   arrange(desc(prop_adolescente))
@@ -146,13 +184,69 @@ head(prop_depto)
 tail(prop_depto)
 ```
 
-# 5. Hallazgos del Análisis Exploratorio
+---
 
-En esta sección se deben discutir:
+# 6. Construcción Dataset para Clustering
 
-- Tendencia temporal observada.
-- Diferencias urbano-rurales.
-- Relación con nivel educativo.
-- Departamentos con mayor y menor proporción de maternidad adolescente.
+```{r agregacion}
+datos_cluster <- datos_unidos %>%
+  filter(!is.na(Deprem)) %>%
+  group_by(Deprem) %>%
+  summarise(
+    prop_adolescente = mean(adolescente, na.rm = TRUE),
+    prop_rural = mean(Areag == 2, na.rm = TRUE),
+    edad_promedio = mean(Edadm, na.rm = TRUE),
+    prop_baja_educ = mean(Escivm == 1, na.rm = TRUE)
+  )
 
-Estos resultados permiten comprender la estructura del fenómeno antes de aplicar técnicas de agrupamiento territorial.
+datos_cluster
+```
+
+---
+
+# 7. Estandarización
+
+```{r escalado}
+datos_scaled <- scale(datos_cluster[, -1])
+```
+
+---
+
+# 8. Método del Codo
+
+```{r elbow}
+fviz_nbclust(datos_scaled, kmeans, method = "wss")
+```
+
+---
+
+# 9. Clustering K-means
+
+```{r kmeans}
+set.seed(123)
+kmeans_model <- kmeans(datos_scaled, centers = 3, nstart = 25)
+
+datos_cluster$cluster <- kmeans_model$cluster
+datos_cluster
+```
+
+---
+
+# 10. Validación con Silhouette
+
+```{r silhouette}
+sil <- silhouette(kmeans_model$cluster, dist(datos_scaled))
+fviz_silhouette(sil)
+```
+
+---
+
+# 11. Conclusiones
+
+- Se identificó la tendencia temporal de la maternidad adolescente.
+- Se evaluaron diferencias entre áreas urbanas y rurales.
+- Se evidenció relación estructural con nivel educativo.
+- Se detectaron departamentos con patrones extremos.
+- El clustering permitió identificar agrupamientos territoriales con características demográficas similares.
+
+Estos resultados permiten comprender la estructura territorial del fenómeno en Guatemala.
