@@ -10,30 +10,100 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+## Justificación
 
-# 1. Introducción
+El estudio de la maternidad en menores de edad es fundamental para comprender procesos sociales que afectan el desarrollo humano, la equidad educativa y la salud pública. La identificación de patrones territoriales y factores asociados permite diseñar intervenciones más eficientes y focalizadas, optimizando el uso de recursos públicos y fortaleciendo las estrategias de prevención.
 
-Guatemala presenta históricamente altas tasas de maternidad adolescente, fenómeno asociado a desigualdades territoriales y educativas.
+Además, el análisis longitudinal de este fenómeno contribuye a evaluar el impacto de políticas públicas implementadas a lo largo del tiempo, así como a detectar persistencias estructurales que requieren atención prioritaria. Desde una perspectiva territorial, comprender la distribución espacial de los nacimientos en madres menores de 18 años permite identificar zonas de mayor vulnerabilidad social y orientar programas de intervención diferenciados.
 
-Este proyecto analiza la evolución y distribución territorial de los nacimientos en madres menores de 18 años utilizando registros oficiales del Instituto Nacional de Estadística (INE) correspondientes al período 2009–2023.
+Este estudio busca aportar evidencia empírica que contribuya al análisis académico del fenómeno y sirva como insumo para la toma de decisiones basada en datos.
+
+## Situación problemática
+
+En Guatemala, la maternidad en menores de 18 años se mantiene como un fenómeno persistente que refleja desigualdades estructurales vinculadas al acceso a la educación, las condiciones socioeconómicas y las diferencias territoriales. Estas desigualdades se manifiestan en variaciones significativas entre regiones, particularmente entre áreas rurales y urbanas.
+
+La distribución territorial no homogénea del fenómeno sugiere la existencia de factores contextuales específicos que influyen en su ocurrencia, incluyendo condiciones educativas, disponibilidad de servicios de salud, características socioeconómicas y dinámicas culturales locales. Sin embargo, la magnitud y configuración espacial de estas diferencias no ha sido analizada de forma integral para el período reciente.
+
+Esta situación limita la comprensión del fenómeno y dificulta la formulación de políticas públicas focalizadas y basadas en evidencia territorial.
+
+##Problema científico
+
+No se dispone de un análisis integral que permita determinar la evolución temporal, la distribución territorial y los factores asociados a los nacimientos en madres menores de 18 años durante el período 2009–2023.
+
+En particular, se desconoce con precisión:
+
+* si la proporción de nacimientos en madres menores de edad ha variado significativamente en el tiempo,
+
+* si existen concentraciones territoriales persistentes del fenómeno,
+
+* si el nivel educativo se asocia de manera sistemática con la maternidad temprana, y si el fenómeno presenta patrones de agrupamiento espacial estadísticamente identificables.
+
+* Por lo tanto, el problema científico consiste en caracterizar la dinámica temporal y espacial de la maternidad en menores de 18 años e identificar los factores territoriales y educativos asociados a su ocurrencia.
 
 Preguntas de investigación:
 
-- ¿Ha disminuido o aumentado la proporción de nacimientos en madres menores de 18 años entre 2009 y 2023?
-- ¿Se concentra más en áreas rurales?
-- ¿Existe relación entre nivel educativo y maternidad temprana?
-- ¿Hay departamentos con patrones extremos?
-- ¿El fenómeno presenta agrupamiento territorial?
+* ¿Cómo ha evolucionado la proporción de nacimientos en madres menores de 18 años entre 2009 y 2023?
 
----
+* ¿Existen diferencias territoriales significativas en la distribución del fenómeno?
 
-# 2. Descripción General del Conjunto de Datos
+* ¿Se observa mayor prevalencia en áreas rurales en comparación con áreas urbanas?
 
-El conjunto de datos corresponde a registros individuales de nacimientos del INE.
+* ¿Existe asociación entre el nivel educativo de la madre y la maternidad temprana?
 
-- Número total de observaciones: 5,195,195
-- Número de variables originales: 61
-- Periodo: 2009–2023
+* ¿Se presentan patrones de agrupamiento espacial estadísticamente significativos?
+
+## Objetivos
+### Objetivo general
+
+Analizar la evolución temporal, la distribución territorial y los factores asociados a los nacimientos en madres menores de 18 años entre 2009 y 2023, identificando tendencias, desigualdades espaciales y posibles patrones de concentración geográfica.
+
+Objetivos específicos:
+
+* Cuantificar la variación anual de la proporción de nacimientos en madres menores de 18 años durante el período de estudio.
+
+* Evaluar la distribución territorial del fenómeno e identificar departamentos con valores extremos.
+
+* Analizar la relación entre nivel educativo de la madre y ocurrencia de maternidad temprana.
+
+* Comparar la prevalencia del fenómeno entre áreas rurales y urbanas.
+
+* Detectar y medir la presencia de agrupamiento espacial mediante técnicas de análisis geográfico.
+
+### Alcances y delimitación del estudio:
+
+El estudio se basa en registros administrativos de nacimientos correspondientes al período 2009–2023. El análisis se enfoca exclusivamente en nacimientos registrados oficialmente y en madres menores de 18 años al momento del parto.
+
+El análisis territorial se realiza a nivel de unidades administrativas disponibles en la base de datos, y la medición de variables educativas y territoriales depende de la calidad y disponibilidad de los registros oficiales.
+
+### Metodología general:
+
+El estudio adopta un enfoque cuantitativo basado en análisis estadístico y espacial de datos secundarios provenientes del Instituto Nacional de Estadística (INE).
+
+El procesamiento y análisis de la información se realizará en el entorno de programación R, utilizando Rmarkdown para la generación reproducible de resultados en formato HTML.
+
+Las etapas principales del análisis incluyen:
+
+* Limpieza y preparación de datos
+
+* depuración de registros
+
+* estandarización de variables
+
+* tratamiento de valores faltantes
+
+* Análisis descriptivo
+
+* cálculo de proporciones anuales
+
+* distribución por nivel educativo
+
+* comparación rural–urbano
+
+* Análisis territorial
+
+* tasas por unidad geográfica
+
+* identificación de valores extremos
 
 Principales variables utilizadas:
 
