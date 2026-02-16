@@ -3,8 +3,8 @@ title: "Proyecto 1 – Maternidad Adolescente en Guatemala (2009–2023)"
 author: "Grupo 6"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -82,43 +82,39 @@ El análisis territorial se realiza a nivel de unidades administrativas disponib
 
 ### Metodología general:
 
-El estudio adopta un enfoque cuantitativo basado en análisis estadístico y espacial de datos secundarios provenientes del Instituto Nacional de Estadística (INE).
+El estudio adopta un enfoque cuantitativo basado en análisis estadístico descriptivo y técnicas de agrupamiento aplicadas a datos secundarios provenientes del Instituto Nacional de Estadística (INE).
 
-El procesamiento y análisis de la información se realizará en el entorno de programación R, utilizando Rmarkdown para la generación reproducible de resultados en formato HTML.
+El procesamiento y análisis de la información se realizó en el entorno de programación R, utilizando RMarkdown para la generación reproducible de resultados en formato HTML y PDF.
 
-Las etapas principales del análisis incluyen:
+Las etapas principales del análisis incluyeron:
 
-* Limpieza y preparación de datos
+* Limpieza y preparación de datos  
+* Depuración de registros y estandarización de variables  
+* Conversión de variables categóricas a factores con etiquetas oficiales  
+* Tratamiento de valores faltantes y exclusión de categorías "Ignorado" cuando fue pertinente  
+* Análisis descriptivo  
+* Cálculo de proporciones anuales de maternidad adolescente  
+* Análisis por nivel educativo  
+* Análisis por grupo étnico  
+* Análisis del lugar de ocurrencia del nacimiento  
+* Análisis territorial por departamento  
+* Identificación de valores extremos  
+* Construcción de indicadores agregados por departamento  
+* Aplicación de algoritmo K-means para identificación de patrones territoriales  
+* Validación del agrupamiento mediante índice de silhouette
 
-* depuración de registros
-
-* estandarización de variables
-
-* tratamiento de valores faltantes
-
-* Análisis descriptivo
-
-* cálculo de proporciones anuales
-
-* distribución por nivel educativo
-
-* comparación rural–urbano
-
-* Análisis territorial
-
-* tasas por unidad geográfica
-
-* identificación de valores extremos
 
 Principales variables utilizadas:
 
-| Variable | Descripción | Tipo |
-|----------|------------|------|
-| Añoreg | Año de registro | Numérica |
-| Edadm | Edad de la madre | Numérica |
-| Areag | Área geográfica (1=Urbano, 2=Rural) | Categórica |
-| Escivm | Nivel educativo madre | Categórica |
-| Deprem | Departamento de residencia | Categórica |
+| Variable     | Descripción                                   | Tipo        |
+|--------------|-----------------------------------------------|------------|
+| Añoreg       | Año de registro                               | Numérica   |
+| Edadm        | Edad de la madre                              | Numérica   |
+| Escolam      | Nivel educativo de la madre                   | Categórica |
+| Pueblopm     | Grupo étnico de la madre                      | Categórica |
+| Sitioocu     | Lugar de ocurrencia del nacimiento            | Categórica |
+| Deprem       | Departamento de residencia de la madre       | Categórica |
+
 
 ---
 
@@ -223,10 +219,11 @@ datos_unidos$Sitioocu <- factor(datos_unidos$Sitioocu,
 
 ```{r dist_edad}
 ggplot(datos_unidos, aes(x = Edadm)) +
-  geom_histogram(bins = 30) +
+  geom_histogram(bins = 30, fill = "#1f77b4", color = "white") +
   labs(title = "Distribución de Edad Materna",
        x = "Edad",
        y = "Frecuencia")
+
 ```
 
 ---
@@ -239,8 +236,8 @@ prop_anual <- datos_unidos %>%
   summarise(prop_adolescente = mean(adolescente, na.rm = TRUE))
 
 ggplot(prop_anual, aes(x = Añoreg, y = prop_adolescente)) +
-  geom_line() +
-  geom_point() +
+  geom_line(color = "#1f77b4", size = 1.2) +
+  geom_point(color = "#1f77b4", size = 2) +
   labs(title = "Evolución de la Maternidad Adolescente",
        x = "Año",
        y = "Proporción")
@@ -258,6 +255,17 @@ prop_educ <- datos_unidos %>%
   arrange(desc(prop_adolescente))
 
 prop_educ
+
+ggplot(prop_educ %>% filter(Escolam != "Ignorado"),
+       aes(x = reorder(Escolam, -prop_adolescente),
+           y = prop_adolescente)) +
+  geom_bar(stat = "identity", fill = "#2ca02c") +
+  labs(title = "Maternidad Adolescente por Nivel Educativo",
+       x = "Nivel Educativo",
+       y = "Proporción") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
 ```
 
 ---
@@ -272,6 +280,17 @@ prop_etnia <- datos_unidos %>%
   arrange(desc(prop_adolescente))
 
 prop_etnia
+
+ggplot(prop_etnia,
+       aes(x = reorder(Pueblopm, -prop_adolescente),
+           y = prop_adolescente)) +
+  geom_bar(stat = "identity", fill = "#9467bd") +
+  labs(title = "Maternidad Adolescente por Grupo Étnico",
+       x = "Grupo Étnico",
+       y = "Proporción") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
 ```
 
 ---
@@ -288,6 +307,16 @@ prop_sitio_educ <- datos_unidos %>%
 
 prop_sitio_educ
 
+ggplot(prop_sitio_educ %>% filter(Escolam != "Ignorado"),
+       aes(x = Sitioocu, y = prop, fill = Escolam)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Nivel Educativo por Lugar de Ocurrencia",
+       x = "Lugar de Ocurrencia",
+       y = "Proporción") +
+  scale_fill_brewer(palette = "Oranges") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
 ```
 
 ---
@@ -303,6 +332,33 @@ prop_depto <- datos_unidos %>%
 
 head(prop_depto)
 tail(prop_depto)
+
+top_deptos <- prop_depto %>%
+  filter(Deprem != "Ignorado") %>%
+  slice_max(prop_adolescente, n = 10)
+
+ggplot(top_deptos,
+       aes(x = reorder(Deprem, prop_adolescente),
+           y = prop_adolescente)) +
+  geom_bar(stat = "identity", fill = "#d62728") +
+  coord_flip() +
+  labs(title = "Departamentos con Mayor Prevalencia",
+       x = "Departamento",
+       y = "Proporción")
+
+bottom_deptos <- prop_depto %>%
+  filter(Deprem != "Ignorado") %>%
+  slice_min(prop_adolescente, n = 10)
+ggplot(bottom_deptos,
+       aes(x = reorder(Deprem, prop_adolescente),
+           y = prop_adolescente)) +
+  geom_bar(stat = "identity", fill = "#d62728") +
+  coord_flip() +
+  labs(title = "Departamentos con Menor Prevalencia de Maternidad Adolescente",
+       x = "Departamento",
+       y = "Proporción")
+
+
 ```
 
 ---
