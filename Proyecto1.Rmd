@@ -1,136 +1,54 @@
 ---
-title: "Proyecto 1 – Maternidad Adolescente en Guatemala (2009–2023)"
+title: "Proyecto 2 – Maternidad Adolescente en Guatemala (2009–2023)"
 author: "Grupo 6"
 date: "`r Sys.Date()`"
 output:
-  html_document: default
-  pdf_document: default
+  pdf_document:
+    toc: true
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
-## Justificación
-
-El estudio de la maternidad en menores de edad es fundamental para comprender procesos sociales que afectan el desarrollo humano, la equidad educativa y la salud pública. La identificación de patrones territoriales y factores asociados permite diseñar intervenciones más eficientes y focalizadas, optimizando el uso de recursos públicos y fortaleciendo las estrategias de prevención.
-
-Además, el análisis longitudinal de este fenómeno contribuye a evaluar el impacto de políticas públicas implementadas a lo largo del tiempo, así como a detectar persistencias estructurales que requieren atención prioritaria. Desde una perspectiva territorial, comprender la distribución espacial de los nacimientos en madres menores de 18 años permite identificar zonas de mayor vulnerabilidad social y orientar programas de intervención diferenciados.
-
-Este estudio busca aportar evidencia empírica que contribuya al análisis académico del fenómeno y sirva como insumo para la toma de decisiones basada en datos.
-
-## Situación problemática
-
-En Guatemala, la maternidad en menores de 18 años se mantiene como un fenómeno persistente que refleja desigualdades estructurales vinculadas al acceso a la educación, las condiciones socioeconómicas y las diferencias territoriales. Estas desigualdades se manifiestan en variaciones significativas entre regiones, particularmente entre áreas rurales y urbanas.
-
-La distribución territorial no homogénea del fenómeno sugiere la existencia de factores contextuales específicos que influyen en su ocurrencia, incluyendo condiciones educativas, disponibilidad de servicios de salud, características socioeconómicas y dinámicas culturales locales. Sin embargo, la magnitud y configuración espacial de estas diferencias no ha sido analizada de forma integral para el período reciente.
-
-Esta situación limita la comprensión del fenómeno y dificulta la formulación de políticas públicas focalizadas y basadas en evidencia territorial.
-
-## Problema científico
-
-No se dispone de un análisis integral que permita determinar la evolución temporal, la distribución territorial y los factores educativos y socioculturales asociados a los nacimientos en madres menores de 18 años durante el período 2009–2023.
-
-En particular, se desconoce con precisión:
-
-• si la proporción de nacimientos en madres menores de edad ha variado significativamente en el tiempo,
-• si existen concentraciones territoriales persistentes del fenómeno,
-• si el nivel educativo y el grupo étnico se asocian de manera sistemática con la maternidad temprana,
-• y si el fenómeno presenta patrones de agrupamiento territorial estadísticamente identificables.
-
-Por lo tanto, el problema científico consiste en caracterizar la dinámica temporal y espacial de la maternidad en menores de 18 años e identificar los factores educativos y territoriales asociados a su ocurrencia.
-
-### Preguntas de investigación:
-
-• ¿Cómo ha evolucionado la proporción de nacimientos en madres menores de 18 años entre 2009 y 2023?
-
-• ¿Existen diferencias territoriales significativas entre departamentos en la prevalencia de maternidad adolescente?
-
-• ¿Existe una relación estructural entre el nivel educativo de la madre y la maternidad temprana?
-
-• ¿Se observan diferencias en la prevalencia del fenómeno según grupo étnico?
-
-• ¿Existe asociación entre el nivel educativo de la madre y el lugar de ocurrencia del nacimiento?
-
-• ¿Se identifican patrones de agrupamiento territorial estadísticamente significativos mediante técnicas de clustering?
-
-
-## Objetivos
-### Objetivo general
-
-Analizar la evolución temporal, la distribución territorial y los factores asociados a los nacimientos en madres menores de 18 años entre 2009 y 2023, identificando tendencias, desigualdades espaciales y posibles patrones de concentración geográfica.
-
-### Objetivos específicos:
-
-• Cuantificar la variación anual de la proporción de nacimientos en madres menores de 18 años durante el período de estudio.
-
-• Evaluar la distribución territorial del fenómeno e identificar departamentos con valores extremos.
-
-• Analizar la relación entre nivel educativo de la madre y ocurrencia de maternidad temprana.
-
-• Examinar posibles diferencias en la prevalencia según grupo étnico.
-
-• Analizar la asociación entre nivel educativo y lugar de ocurrencia del nacimiento.
-
-• Detectar y medir la presencia de agrupamiento territorial mediante técnicas de clustering.
-
-
-### Alcances y delimitación del estudio:
-
-El estudio se basa en registros administrativos de nacimientos correspondientes al período 2009–2023. El análisis se enfoca exclusivamente en nacimientos registrados oficialmente y en madres menores de 18 años al momento del parto.
-
-El análisis territorial se realiza a nivel de unidades administrativas disponibles en la base de datos, y la medición de variables educativas y territoriales depende de la calidad y disponibilidad de los registros oficiales.
-
-### Metodología general:
-
-El estudio adopta un enfoque cuantitativo basado en análisis estadístico descriptivo y técnicas de agrupamiento aplicadas a datos secundarios provenientes del Instituto Nacional de Estadística (INE).
-
-El procesamiento y análisis de la información se realizó en el entorno de programación R, utilizando RMarkdown para la generación reproducible de resultados en formato HTML y PDF.
-
-Las etapas principales del análisis incluyeron:
-
-* Limpieza y preparación de datos  
-* Depuración de registros y estandarización de variables  
-* Conversión de variables categóricas a factores con etiquetas oficiales  
-* Tratamiento de valores faltantes y exclusión de categorías "Ignorado" cuando fue pertinente  
-* Análisis descriptivo  
-* Cálculo de proporciones anuales de maternidad adolescente  
-* Análisis por nivel educativo  
-* Análisis por grupo étnico  
-* Análisis del lugar de ocurrencia del nacimiento  
-* Análisis territorial por departamento  
-* Identificación de valores extremos  
-* Construcción de indicadores agregados por departamento  
-* Aplicación de algoritmo K-means para identificación de patrones territoriales  
-* Validación del agrupamiento mediante índice de silhouette
-
-
-Principales variables utilizadas:
-
-| Variable     | Descripción                                   | Tipo        |
-|--------------|-----------------------------------------------|------------|
-| Añoreg       | Año de registro                               | Numérica   |
-| Edadm        | Edad de la madre                              | Numérica   |
-| Escolam      | Nivel educativo de la madre                   | Categórica |
-| Pueblopm     | Grupo étnico de la madre                      | Categórica |
-| Sitioocu     | Lugar de ocurrencia del nacimiento            | Categórica |
-| Deprem       | Departamento de residencia de la madre       | Categórica |
-
 
 ---
 
-# 3. Carga y Unión de Datos
+# 1. Librerías
 
-```{r carga_datos}
+```{r librerias}
 library(haven)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
-library(cluster)
-library(factoextra)
+library(caret)
+library(ROSE)
+library(pROC)
+```
 
+> Instalar paquetes nuevos si es necesario:
+> `install.packages(c("caret", "ROSE", "pROC", "tidyr"))`
+
+---
+
+# 2. Variable Respuesta
+
+La variable respuesta es **`adolescente`** (binaria):
+
+- `1` = nacimiento en madre menor de 18 años
+- `0` = nacimiento en madre de 18 años o más
+
+Es una variable **cualitativa / categórica binaria**, por lo que el problema es de **clasificación**. Se eligió esta variable porque fue el eje central del análisis exploratorio del Proyecto 1, donde se identificaron patrones territoriales, educativos y étnicos asociados al fenómeno. Predecir si un nacimiento corresponde a una madre adolescente permite identificar los factores más relevantes y diseñar intervenciones focalizadas.
+
+---
+
+# 3. Carga de datos
+
+```{r carga}
 archivos <- list.files("Datos", pattern = "\\.sav$", full.names = TRUE)
-
-# Guardamos un archivo original para extraer etiquetas oficiales
-df_test <- read_sav(archivos[1])
+df_test  <- read_sav(archivos[1])
 
 lista_datos <- lapply(archivos, function(x) {
   df <- read_sav(x)
@@ -140,381 +58,344 @@ lista_datos <- lapply(archivos, function(x) {
 })
 
 datos_unidos <- bind_rows(lista_datos)
-
-length(archivos)
-dim(datos_unidos)
+cat("Registros totales:", nrow(datos_unidos), "\n")
 ```
 
 ---
 
-# 4. Limpieza y Preparación
+# 4. Limpieza y construcción de variables
 
-## Corrección del año
-
-```{r year_fix}
+```{r limpieza}
+# --- Año ---
 datos_unidos$Añoreg <- ifelse(nchar(datos_unidos$Añoreg) == 1,
                               paste0("200", datos_unidos$Añoreg),
-                              ifelse(nchar(datos_unidos$Añoreg) == 2,
-                                     paste0("20", datos_unidos$Añoreg),
-                                     datos_unidos$Añoreg))
-
+                       ifelse(nchar(datos_unidos$Añoreg) == 2,
+                              paste0("20",  datos_unidos$Añoreg),
+                              datos_unidos$Añoreg))
 datos_unidos$Añoreg <- as.numeric(datos_unidos$Añoreg)
-table(datos_unidos$Añoreg)
-```
 
----
-
-## Limpieza de edad materna
-
-```{r edad_limpia}
+# --- Edad materna ---
 datos_unidos$Edadm <- as.numeric(datos_unidos$Edadm)
 datos_unidos$Edadm[datos_unidos$Edadm == 999] <- NA
-summary(datos_unidos$Edadm)
-```
 
----
-
-## Variable maternidad adolescente
-
-```{r adolescente}
+# --- Variable respuesta ---
 datos_unidos$adolescente <- ifelse(datos_unidos$Edadm < 18, 1, 0)
-table(datos_unidos$adolescente)
-```
 
----
-
-## Conversión de variables a nombres reales
-
-```{r convertir_factores}
-# Departamento
-labels_depto <- attr(df_test$Deprem, "labels")
-datos_unidos$Deprem <- factor(datos_unidos$Deprem,
-                              levels = labels_depto,
-                              labels = names(labels_depto))
-
-# Educación madre
-labels_educ <- attr(df_test$Escolam, "labels")
-datos_unidos$Escolam <- factor(datos_unidos$Escolam,
-                               levels = labels_educ,
-                               labels = names(labels_educ))
-
-# Grupo étnico madre
+# --- Factores con etiquetas oficiales ---
+labels_depto <- attr(df_test$Deprem,   "labels")
+labels_educ  <- attr(df_test$Escolam,  "labels")
 labels_etnia <- attr(df_test$Pueblopm, "labels")
-datos_unidos$Pueblopm <- factor(datos_unidos$Pueblopm,
-                                levels = labels_etnia,
-                                labels = names(labels_etnia))
-
-# Sitio de ocurrencia
 labels_sitio <- attr(df_test$Sitioocu, "labels")
-datos_unidos$Sitioocu <- factor(datos_unidos$Sitioocu,
-                                levels = labels_sitio,
-                                labels = names(labels_sitio))
+
+datos_unidos$Deprem   <- factor(datos_unidos$Deprem,   levels = labels_depto, labels = names(labels_depto))
+datos_unidos$Escolam  <- factor(datos_unidos$Escolam,  levels = labels_educ,  labels = names(labels_educ))
+datos_unidos$Pueblopm <- factor(datos_unidos$Pueblopm, levels = labels_etnia, labels = names(labels_etnia))
+datos_unidos$Sitioocu <- factor(datos_unidos$Sitioocu, levels = labels_sitio, labels = names(labels_sitio))
 ```
 
 ---
 
-# 5. Análisis Exploratorio
+# 5. Selección de variables predictoras y dataset final
 
-## 5.1 Distribución de Edad Materna
+Se seleccionan las variables con mayor poder explicativo identificadas en el EDA del Proyecto 1. Se excluyen registros con NA y categorías "Ignorado".
 
-```{r dist_edad}
-ggplot(datos_unidos, aes(x = Edadm)) +
-  geom_histogram(bins = 30, fill = "#1f77b4", color = "white") +
-  labs(title = "Distribución de Edad Materna",
-       x = "Edad",
-       y = "Frecuencia")
-
-```
-
----
-
-## 5.2 Evolución Temporal
-
-```{r evolucion}
-prop_anual <- datos_unidos %>%
-  group_by(Añoreg) %>%
-  summarise(prop_adolescente = mean(adolescente, na.rm = TRUE))
-
-ggplot(prop_anual, aes(x = Añoreg, y = prop_adolescente)) +
-  geom_line(color = "#1f77b4", size = 1.2) +
-  geom_point(color = "#1f77b4", size = 2) +
-  labs(title = "Evolución de la Maternidad Adolescente",
-       x = "Año",
-       y = "Proporción")
-```
-
----
-
-## 5.3 Educación y Maternidad Adolescente
-
-```{r educacion}
-prop_educ <- datos_unidos %>%
-  filter(!is.na(Escolam)) %>%
-  group_by(Escolam) %>%
-  summarise(prop_adolescente = mean(adolescente, na.rm = TRUE)) %>%
-  arrange(desc(prop_adolescente))
-
-prop_educ
-
-ggplot(prop_educ %>% filter(Escolam != "Ignorado"),
-       aes(x = reorder(Escolam, -prop_adolescente),
-           y = prop_adolescente)) +
-  geom_bar(stat = "identity", fill = "#2ca02c") +
-  labs(title = "Maternidad Adolescente por Nivel Educativo",
-       x = "Nivel Educativo",
-       y = "Proporción") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
-```
-
----
-
-## 5.4 Grupo Étnico y Maternidad Adolescente
-
-```{r etnia}
-prop_etnia <- datos_unidos %>%
-  filter(!is.na(Pueblopm), Pueblopm != "Ignorado") %>%
-  group_by(Pueblopm) %>%
-  summarise(prop_adolescente = mean(adolescente, na.rm = TRUE)) %>%
-  arrange(desc(prop_adolescente))
-
-prop_etnia
-
-ggplot(prop_etnia,
-       aes(x = reorder(Pueblopm, -prop_adolescente),
-           y = prop_adolescente)) +
-  geom_bar(stat = "identity", fill = "#9467bd") +
-  labs(title = "Maternidad Adolescente por Grupo Étnico",
-       x = "Grupo Étnico",
-       y = "Proporción") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
-```
-
----
-
-## 5.5 Lugar de Ocurrencia y Educación
-
-```{r sitio}
-prop_sitio_educ <- datos_unidos %>%
-  filter(!is.na(Sitioocu), !is.na(Escolam)) %>%
-  group_by(Sitioocu, Escolam) %>%
-  summarise(n = n(), .groups = "drop") %>%
-  group_by(Sitioocu) %>%
-  mutate(prop = n / sum(n))
-
-prop_sitio_educ
-
-ggplot(prop_sitio_educ %>% filter(Escolam != "Ignorado"),
-       aes(x = Sitioocu, y = prop, fill = Escolam)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Nivel Educativo por Lugar de Ocurrencia",
-       x = "Lugar de Ocurrencia",
-       y = "Proporción") +
-  scale_fill_brewer(palette = "Oranges") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
-```
-
----
-
-## 5.6 Departamentos con Mayor y Menor Prevalencia
-
-```{r deptos}
-prop_depto <- datos_unidos %>%
-  filter(!is.na(Deprem)) %>%
-  group_by(Deprem) %>%
-  summarise(prop_adolescente = mean(adolescente, na.rm = TRUE)) %>%
-  arrange(desc(prop_adolescente))
-
-head(prop_depto)
-tail(prop_depto)
-
-top_deptos <- prop_depto %>%
-  filter(Deprem != "Ignorado") %>%
-  slice_max(prop_adolescente, n = 10)
-
-ggplot(top_deptos,
-       aes(x = reorder(Deprem, prop_adolescente),
-           y = prop_adolescente)) +
-  geom_bar(stat = "identity", fill = "#d62728") +
-  coord_flip() +
-  labs(title = "Departamentos con Mayor Prevalencia",
-       x = "Departamento",
-       y = "Proporción")
-
-bottom_deptos <- prop_depto %>%
-  filter(Deprem != "Ignorado") %>%
-  slice_min(prop_adolescente, n = 10)
-ggplot(bottom_deptos,
-       aes(x = reorder(Deprem, prop_adolescente),
-           y = prop_adolescente)) +
-  geom_bar(stat = "identity", fill = "#d62728") +
-  coord_flip() +
-  labs(title = "Departamentos con Menor Prevalencia de Maternidad Adolescente",
-       x = "Departamento",
-       y = "Proporción")
-
-
-```
-
----
-
-# 6. Construcción Dataset para Clustering
-
-```{r agregacion}
-datos_cluster <- datos_unidos %>%
-  filter(!is.na(Deprem)) %>%
-  group_by(Deprem) %>%
-  summarise(
-    prop_adolescente = mean(adolescente, na.rm = TRUE),
-    edad_promedio = mean(Edadm, na.rm = TRUE),
-    prop_baja_educ = mean(Escolam %in% c("Ninguno","Primaria"), na.rm = TRUE),
-    prop_educ_superior = mean(Escolam %in% c("Universitario","Post Grado"), na.rm = TRUE)
+```{r seleccion_vars}
+df_modelo <- datos_unidos %>%
+  select(adolescente, Añoreg, Escolam, Pueblopm, Sitioocu, Deprem) %>%
+  filter(
+    !is.na(adolescente),
+    !is.na(Escolam),
+    !is.na(Pueblopm),
+    !is.na(Sitioocu),
+    !is.na(Deprem),
+    Escolam  != "Ignorado",
+    Pueblopm != "Ignorado",
+    Sitioocu != "Ignorado",
+    Deprem   != "Ignorado"
+  ) %>%
+  mutate(
+    adolescente = factor(adolescente, levels = c(0, 1), labels = c("No", "Si")),
+    Añoreg      = as.numeric(Añoreg)
   )
 
-datos_cluster
+df_modelo <- droplevels(df_modelo)
+
+cat("Registros después de limpieza:", nrow(df_modelo), "\n")
+glimpse(df_modelo)
 ```
+
+Las variables seleccionadas son:
+
+| Variable   | Descripción                          | Tipo        |
+|------------|--------------------------------------|-------------|
+| Añoreg     | Año de registro del nacimiento       | Numérica    |
+| Escolam    | Nivel educativo de la madre          | Categórica  |
+| Pueblopm   | Grupo étnico de la madre             | Categórica  |
+| Sitioocu   | Lugar de ocurrencia del nacimiento   | Categórica  |
+| Deprem     | Departamento de residencia           | Categórica  |
 
 ---
 
-# 7. Estandarización
+# 6. Análisis de desbalance
 
-```{r escalado}
-datos_scaled <- scale(datos_cluster[, -1])
+```{r desbalance}
+tabla_clase <- table(df_modelo$adolescente)
+prop_clase  <- prop.table(tabla_clase)
+
+print(tabla_clase)
+print(round(prop_clase * 100, 2))
+
+ggplot(as.data.frame(prop_clase), aes(x = Var1, y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("#4292c6", "#d62728")) +
+  labs(title = "Distribución de la variable respuesta",
+       x = "Maternidad adolescente", y = "Proporción") +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
+
+El dataset presenta un desbalance severo: aproximadamente el 98% de los registros corresponden a madres no adolescentes y solo el 2% a madres menores de 18 años. Esto ocurre porque al filtrar las categorías "Ignorado" y NAs, muchos registros de madres adolescentes fueron eliminados junto con los demás.
+
+Este desbalance tiene implicaciones directas en el modelado: un clasificador que prediga siempre "No" tendría ~98% de accuracy sin aprender nada útil. Por esta razón se utilizará oversampling (ROSE) para balancear el conjunto de entrenamiento, y se reportarán F1-score y AUC-ROC como métricas principales en lugar de accuracy.
 
 ---
 
-# 8. Método del Codo
+# 7. División Train / Test (70 / 30, estratificada)
 
-```{r elbow}
-fviz_nbclust(datos_scaled, kmeans, method = "wss")
-```
+Se usa `createDataPartition` de `caret` para garantizar que ambas particiones conserven la misma proporción de la clase minoritaria.
 
----
-
-# 9. Clustering K-means
-
-```{r kmeans}
+```{r split}
 set.seed(123)
-kmeans_model <- kmeans(datos_scaled, centers = 3, nstart = 25)
 
-datos_cluster$cluster <- kmeans_model$cluster
-datos_cluster
+idx_train <- createDataPartition(df_modelo$adolescente, p = 0.70, list = FALSE)
+
+train_data <- df_modelo[ idx_train, ]
+test_data  <- df_modelo[-idx_train, ]
+
+cat("Registros en train:", nrow(train_data), "\n")
+cat("Registros en test: ", nrow(test_data),  "\n")
+
+cat("\nProporción en TRAIN:\n")
+print(round(prop.table(table(train_data$adolescente)) * 100, 2))
+
+cat("\nProporción en TEST:\n")
+print(round(prop.table(table(test_data$adolescente))  * 100, 2))
+```
+
+Se utilizó una división 70/30 estratificada. La estratificación garantiza que el desbalance original se preserve en ambas particiones, evitando que por azar una de ellas tenga una proporción distinta de la clase minoritaria. El conjunto de prueba no será modificado en ningún momento durante el entrenamiento.
+
+---
+
+# 8. Exportar datos para el grupo
+
+```{r exportar}
+saveRDS(train_data, "train_data.rds")
+saveRDS(test_data,  "test_data.rds")
+cat("Archivos guardados: train_data.rds y test_data.rds\n")
 ```
 
 ---
 
-# 10. Validación con Silhouette
+# 9. Función auxiliar de métricas
 
-```{r silhouette}
-sil <- silhouette(kmeans_model$cluster, dist(datos_scaled))
-fviz_silhouette(sil)
+Para mantener consistencia entre los 3 modelos, se define una función que calcula accuracy, precisión, recall, F1-score y AUC-ROC sobre el conjunto de prueba.
+
+```{r metricas_fn}
+evaluar_modelo <- function(modelo, datos_test, nombre_modelo, threshold = 0.5) {
+  probs <- predict(modelo, newdata = datos_test, type = "response")
+  preds <- factor(ifelse(probs >= threshold, "Si", "No"),
+                  levels = c("No", "Si"))
+
+  cm      <- confusionMatrix(preds, datos_test$adolescente, positive = "Si")
+  roc_obj <- roc(as.numeric(datos_test$adolescente == "Si"), probs, quiet = TRUE)
+  auc_val <- auc(roc_obj)
+
+  cat("\n=============================\n")
+  cat(" Modelo:", nombre_modelo, "\n")
+  cat(" Threshold:", threshold, "\n")
+  cat("=============================\n")
+  print(cm$table)
+  cat("\nAccuracy :", round(cm$overall["Accuracy"],  4), "\n")
+  cat("Precision:", round(cm$byClass["Precision"],  4), "\n")
+  cat("Recall   :", round(cm$byClass["Recall"],     4), "\n")
+  cat("F1-score :", round(cm$byClass["F1"],         4), "\n")
+  cat("AUC-ROC  :", round(auc_val,                  4), "\n")
+
+  list(
+    nombre    = nombre_modelo,
+    threshold = threshold,
+    accuracy  = cm$overall["Accuracy"],
+    precision = cm$byClass["Precision"],
+    recall    = cm$byClass["Recall"],
+    f1        = cm$byClass["F1"],
+    auc       = as.numeric(auc_val),
+    roc       = roc_obj,
+    cm        = cm
+  )
+}
 ```
 
+---
 
-# 11. Interpretación de Resultados
+# 10. Regresión Logística
 
-## Evolución temporal de la maternidad adolescente
+La regresión logística es un algoritmo de clasificación binaria que modela la probabilidad de pertenecer a la clase positiva mediante una función sigmoide. Es interpretable, eficiente computacionalmente y sirve como línea base para comparar contra algoritmos más complejos. Maneja variables categóricas directamente como factores en R sin necesidad de codificación manual.
 
-El análisis de la proporción anual de nacimientos en madres menores de 18 años muestra un comportamiento no lineal durante el período 2009–2023.
+## Modelo 1 — Sin balancear, threshold 0.5
 
-Se observa un incremento progresivo entre 2009 y 2012, alcanzando un punto máximo cercano al 10.7%. A partir de 2013 se identifica una tendencia descendente relativamente sostenida, con una caída más marcada en 2020 (aproximadamente 7.3%). Este descenso podría estar asociado a cambios estructurales en políticas públicas o a efectos indirectos derivados de la pandemia.
+Este modelo sirve como línea base. Se espera alta accuracy pero bajo recall en la clase "Si" debido al desbalance severo.
 
-En 2023 se observa un leve repunte, lo cual sugiere que el fenómeno no ha desaparecido y mantiene cierta persistencia estructural.
+```{r modelo1}
+set.seed(123)
 
-En términos generales, la tendencia indica una reducción moderada respecto al pico observado en 2012, aunque la proporción continúa siendo significativa.
+m1 <- glm(adolescente ~ .,
+          data   = train_data,
+          family = binomial(link = "logit"))
+
+summary(m1)
+```
+
+```{r eval_m1}
+res1 <- evaluar_modelo(m1, test_data,
+                       nombre_modelo = "M1 – Sin balancear, threshold 0.5")
+```
+
+Como se esperaba, el modelo sin balancear tiene accuracy alta (~98%) pero un recall muy bajo para la clase "Si". El modelo aprende a predecir casi siempre "No" porque esa clase domina el conjunto de entrenamiento. Esto confirma que accuracy no es una métrica adecuada para este problema y que es necesario corregir el desbalance.
 
 ---
 
-## Grupo Étnico y Maternidad Adolescente
+## Modelo 2 — Con ROSE balanceado, threshold 0.5
 
-Al excluir los registros clasificados como “Ignorado”, se observa variabilidad en la prevalencia del fenómeno según grupo étnico.
+Se aplica oversampling con ROSE sobre el conjunto de entrenamiento para balancear las clases. El conjunto de prueba no se modifica, ya que debe representar la distribución real del fenómeno.
 
-El grupo Maya presenta una proporción aproximada de 2.53%, mientras que el grupo Mestizo/Ladino muestra cerca de 1.58%. Las categorías Garífuna (1.33%) y Xinka (0.67%) presentan valores menores.
+```{r modelo2}
+set.seed(123)
 
-Aunque las diferencias no son extremadamente amplias en términos absolutos, sí evidencian variabilidad sociocultural que podría estar asociada a condiciones estructurales diferenciadas.
+train_balanced <- ROSE(adolescente ~ ., data = train_data, seed = 123)$data
 
----
+cat("Distribución en train balanceado:\n")
+print(table(train_balanced$adolescente))
 
-## Relación con Nivel Educativo
+m2 <- glm(adolescente ~ .,
+          data   = train_balanced,
+          family = binomial(link = "logit"))
 
-El análisis por nivel educativo muestra una relación inversa clara entre educación y maternidad adolescente.
+summary(m2)
+```
 
-Las mayores proporciones se observan en madres sin escolaridad (9.5%) y con educación primaria (5.2%). A medida que aumenta el nivel educativo, la proporción disminuye progresivamente: en educación básica es aproximadamente 2.8%, en diversificado cerca de 0.5%, y en nivel universitario es prácticamente nula.
+```{r eval_m2}
+res2 <- evaluar_modelo(m2, test_data,
+                       nombre_modelo = "M2 – ROSE balanceado, threshold 0.5")
+```
 
-Este patrón confirma que el nivel educativo constituye uno de los factores estructurales más fuertemente asociados a la maternidad temprana.
-
----
----
-
-## Lugar de Ocurrencia y Educación
-
-El análisis del lugar de ocurrencia del nacimiento muestra diferencias claras según nivel educativo. En hospitales públicos, la mayor proporción de nacimientos se concentra en madres con educación primaria y básica. En hospitales privados, aumenta la proporción relativa de madres con niveles educativos intermedios y superiores.
-
-Por otro lado, los partos domiciliarios y en otros establecimientos presentan mayor proporción de madres con niveles educativos bajos.
-
-Estos resultados sugieren una asociación estructural entre nivel educativo y tipo de establecimiento donde ocurre el nacimiento, lo que podría reflejar diferencias en acceso a servicios de salud y condiciones socioeconómicas.
+Al balancear las clases con ROSE, el recall mejora considerablemente. La accuracy baja porque el modelo ya no predice siempre "No", lo cual es el comportamiento correcto. El F1-score y AUC-ROC son mejores indicadores de rendimiento en este contexto y deben ser las métricas de referencia para comparar modelos.
 
 ---
 
-## Departamentos con Patrones Extremos
+## Modelo 3 — Con ROSE balanceado, threshold 0.3
 
-Se excluyeron los registros clasificados como “Ignorado” para evitar distorsiones en la interpretación territorial.
+Se mantiene el mismo modelo entrenado con ROSE pero se ajusta el threshold de decisión de 0.5 a 0.3. Al bajar el threshold, el modelo clasifica como "Si" con menor confianza requerida, lo que aumenta el recall a costa de algo de precisión. En contextos de salud pública suele preferirse detectar más casos verdaderos (mayor recall) aunque se generen más falsos positivos.
 
-El análisis territorial permitió identificar departamentos con proporciones significativamente mayores y menores de maternidad adolescente.
+```{r eval_m3}
+res3 <- evaluar_modelo(m2, test_data,
+                       nombre_modelo = "M3 – ROSE balanceado, threshold 0.3",
+                       threshold     = 0.3)
+```
 
-Algunos departamentos superan el 12%, mientras que otros se encuentran por debajo del 5%. Estas diferencias reflejan desigualdades estructurales territoriales asociadas a condiciones socioeducativas y demográficas.
-
----
-
-# 12. Clustering Territorial
-
-Para profundizar en la estructura territorial del fenómeno, se construyó un dataset agregado por departamento incorporando:
-
-• Proporción de maternidad adolescente
-• Proporción de baja educación
-• Proporción de educación superior
-• Edad promedio materna
-• Proporción de baja educación
-
-Tras estandarizar las variables y aplicar el algoritmo K-means con k = 3, se identificaron tres grupos territoriales diferenciados. El índice promedio de silhouette fue 0.53, lo cual indica una estructura de agrupamiento moderadamente clara y respalda la existencia de perfiles territoriales diferenciados.
-
-
-## Interpretación de los Clusters
-
-**Cluster 1 – Perfil estructural con menor prevalencia**
-
-Departamentos con menor proporción de maternidad adolescente, mayor edad promedio materna y mayor proporción de educación superior. Representan territorios con mejores indicadores educativos relativos.
-
-**Cluster 2 – Perfil de transición**
-
-Departamentos con valores intermedios tanto en proporción adolescente como en nivel educativo. Presentan características mixtas sin extremos marcados.
-
-**Cluster 3 – Alta vulnerabilidad estructural**
-
-Departamentos con mayor proporción de maternidad adolescente y mayor proporción de baja educación. Representan territorios con mayor concentración del fenómeno y posibles condiciones estructurales más desfavorables.
-
+Con threshold 0.3 el recall aumenta respecto al Modelo 2, detectando más casos de maternidad adolescente. Sin embargo, la precisión disminuye porque también aumentan los falsos positivos. Este trade-off es relevante para el problema: dependiendo del uso de los resultados, puede ser preferible detectar más casos a riesgo de generar algunas alertas innecesarias.
 
 ---
 
-# 13. Conclusiones Generales
+# 11. Comparación de modelos
 
-El análisis realizado permitió caracterizar de manera integral la dinámica temporal y territorial de la maternidad en madres menores de 18 años en Guatemala durante el período 2009–2023.
+```{r comparacion}
+resumen <- data.frame(
+  Modelo    = c(res1$nombre, res2$nombre, res3$nombre),
+  Accuracy  = round(c(res1$accuracy,  res2$accuracy,  res3$accuracy),  4),
+  Precision = round(c(res1$precision, res2$precision, res3$precision), 4),
+  Recall    = round(c(res1$recall,    res2$recall,    res3$recall),    4),
+  F1        = round(c(res1$f1,        res2$f1,        res3$f1),        4),
+  AUC_ROC   = round(c(res1$auc,       res2$auc,       res3$auc),       4)
+)
 
-En primer lugar, se identificó una tendencia no lineal en la evolución temporal del fenómeno. La proporción de nacimientos en madres adolescentes aumentó entre 2009 y 2012, alcanzando su punto máximo en ese período, y posteriormente mostró una tendencia descendente moderada hasta 2020, con un leve repunte en los años más recientes. Esto evidencia que el fenómeno ha experimentado variaciones estructurales a lo largo del tiempo.
+print(resumen)
+```
 
-En segundo lugar, el nivel educativo de la madre mostró la relación más fuerte y consistente con la maternidad temprana. Las mayores proporciones se concentraron en niveles educativos bajos, mientras que en niveles universitarios y de postgrado la prevalencia fue prácticamente nula. Este resultado confirma que la educación constituye uno de los factores estructurales más relevantes asociados al fenómeno. Asimismo, se identificó una asociación entre nivel educativo y lugar de ocurrencia del nacimiento. Las madres con menor nivel educativo presentan mayor concentración en hospitales públicos y otras modalidades, mientras que niveles educativos superiores se asocian en mayor proporción con establecimientos privados. Esto sugiere una posible dimensión estructural vinculada al acceso diferenciado a servicios de salud.
+```{r grafica_comparacion}
+metricas_long <- resumen %>%
+  select(Modelo, F1, AUC_ROC) %>%
+  pivot_longer(cols = c(F1, AUC_ROC),
+               names_to  = "Metrica",
+               values_to = "Valor")
 
+ggplot(metricas_long, aes(x = Modelo, y = Valor, fill = Metrica)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("#1f77b4", "#d62728")) +
+  labs(title = "Comparación de modelos – F1 y AUC-ROC",
+       x = NULL, y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+```
 
-En tercer lugar, se observaron diferencias según grupo étnico. Aunque la mayor parte de los registros se concentra en categorías mayoritarias, se identificaron variaciones porcentuales que sugieren la presencia de factores socioculturales asociados a la maternidad adolescente.
+La tabla y gráfica muestran que los Modelos 2 y 3 (con ROSE) superan ampliamente al Modelo 1 en F1 y AUC-ROC, confirmando que el balanceo de clases es indispensable para este problema. La diferencia entre M2 y M3 refleja el trade-off entre precisión y recall según el threshold elegido.
 
-Asimismo, el análisis territorial reveló departamentos con prevalencias significativamente superiores al promedio nacional, lo cual indica desigualdades geográficas persistentes.
+---
 
-Finalmente, el análisis de clustering permitió identificar tres perfiles territoriales diferenciados. El índice promedio de silhouette (0.53) indica una estructura de agrupamiento aceptable, lo que respalda la existencia de configuraciones territoriales diferenciadas en la maternidad adolescente.
+# 12. Curvas ROC comparativas
 
-En conjunto, los resultados confirman que la maternidad temprana en Guatemala es un fenómeno multidimensional influenciado por factores educativos y territoriales, con patrones espaciales identificables mediante técnicas de análisis exploratorio y minería de datos.
+```{r roc_curves}
+plot(res1$roc, col = "#888888", lwd = 1.5,
+     main = "Curvas ROC – Regresión Logística")
+plot(res2$roc, col = "#1f77b4", lwd = 2, add = TRUE)
+plot(res3$roc, col = "#d62728", lwd = 2, add = TRUE)
+legend("bottomright",
+       legend = c(
+         paste0("M1 sin balancear  (AUC=", round(res1$auc, 3), ")"),
+         paste0("M2 ROSE t=0.5     (AUC=", round(res2$auc, 3), ")"),
+         paste0("M3 ROSE t=0.3     (AUC=", round(res3$auc, 3), ")")
+       ),
+       col  = c("#888888", "#1f77b4", "#d62728"),
+       lwd  = 2,
+       cex  = 0.85)
+```
+
+La curva ROC muestra el rendimiento del modelo a distintos thresholds. Un AUC cercano a 1 indica que el modelo distingue bien entre las clases. Los Modelos 2 y 3 comparten la misma curva ROC porque usan el mismo modelo entrenado — la diferencia está solo en el punto de operación (threshold) elegido sobre esa curva.
+
+---
+
+# 13. Modelo final seleccionado
+
+```{r modelo_final}
+cat("Modelo final: M2 – ROSE balanceado, threshold 0.5\n\n")
+cat("Justificación: ofrece el mejor balance entre precisión y recall.\n")
+cat("El threshold 0.5 es más conservador que 0.3 y evita un exceso\n")
+cat("de falsos positivos, manteniendo un F1 y AUC competitivos.\n\n")
+
+print(res2$cm)
+```
+
+```{r grafica_cm}
+cm_df <- as.data.frame(res2$cm$table)
+names(cm_df) <- c("Predicho", "Real", "Freq")
+
+ggplot(cm_df, aes(x = Real, y = Predicho, fill = Freq)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = Freq), size = 5, fontface = "bold",
+            color = "white") +
+  scale_fill_gradient(low = "#4292c6", high = "#08306b") +
+  labs(title = "Matriz de confusión – Modelo final (Regresión Logística)",
+       x = "Valor real", y = "Valor predicho") +
+  theme_minimal()
+```
+
+---
+
+# 14. Interpretación de coeficientes
+
+```{r coeficientes}
+odds_ratios <- exp(coef(m2))
+cat("Odds Ratios (ordenados de mayor a menor):\n")
+print(round(sort(odds_ratios, decreasing = TRUE), 4))
+```
+
+Los odds ratios indican el efecto de cada variable sobre la probabilidad de maternidad adolescente. Valores mayores a 1 aumentan la probabilidad y valores menores a 1 la reducen. Las variables educativas deberían mostrar los efectos más fuertes, consistente con los resultados del EDA del Proyecto 1 donde se identificó una relación inversa clara entre nivel educativo y maternidad temprana.
