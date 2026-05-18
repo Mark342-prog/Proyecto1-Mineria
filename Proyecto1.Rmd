@@ -26,6 +26,8 @@ library(ggplot2)
 library(caret)
 library(ROSE)
 library(pROC)
+library(randomForest)
+library(e1071)
 ```
 
 > Instalar paquetes nuevos si es necesario:
@@ -401,11 +403,282 @@ print(round(sort(odds_ratios, decreasing = TRUE), 4))
 Los odds ratios indican el efecto de cada variable sobre la probabilidad de maternidad adolescente. Valores mayores a 1 aumentan la probabilidad y valores menores a 1 la reducen. Las variables educativas deberían mostrar los efectos más fuertes, consistente con los resultados del EDA del Proyecto 1 donde se identificó una relación inversa clara entre nivel educativo y maternidad temprana.
 
 
-```{r}
-library(e1071)
+
+# 15. Random Forest
+La técnica Random Forest es un algoritmo de aprendizaje supervisado basado en múltiples árboles de decisión, donde entrena numerosos árboles sobre subconjuntos aleatorios de los datos y combina sus predicciones mediante votación.
+Este algoritmo es especialmente útil en problemas con relaciones no lineales y variables categóricas, además de ser robusto frente a datasets desbalanceados.
+
+Debido a estas características, Random Forest ha sido ampliamente utilizado en problemas de clasificación en salud pública y análisis de riesgo.
+
+## Función métricas para Random Forest
+
+```{r metricas_rf}
+evaluar_rf <- function(modelo, datos_test, nombre_modelo, threshold = 0.5) {
+
+  probs <- predict(modelo, newdata = datos_test, type = "prob")[, "Si"]
+
+  preds <- factor(ifelse(probs >= threshold, "Si", "No"),
+                  levels = c("No", "Si"))
+
+  cm <- confusionMatrix(preds, datos_test$adolescente,
+                        positive = "Si")
+
+  roc_obj <- roc(as.numeric(datos_test$adolescente == "Si"),
+                 probs,
+                 quiet = TRUE)
+
+  auc_val <- auc(roc_obj)
+
+  cat("\n=============================\n")
+  cat(" Modelo:", nombre_modelo, "\n")
+  cat(" Threshold:", threshold, "\n")
+  cat("=============================\n")
+
+  print(cm$table)
+
+  cat("\nAccuracy :", round(cm$overall["Accuracy"], 4), "\n")
+  cat("Precision:", round(cm$byClass["Precision"], 4), "\n")
+  cat("Recall   :", round(cm$byClass["Recall"], 4), "\n")
+  cat("F1-score :", round(cm$byClass["F1"], 4), "\n")
+  cat("AUC-ROC  :", round(auc_val, 4), "\n")
+
+  list(
+    nombre    = nombre_modelo,
+    threshold = threshold,
+    accuracy  = cm$overall["Accuracy"],
+    precision = cm$byClass["Precision"],
+    recall    = cm$byClass["Recall"],
+    f1        = cm$byClass["F1"],
+    auc       = as.numeric(auc_val),
+    roc       = roc_obj,
+    cm        = cm
+  )
+}
 ```
 
-# 15. Naive Bayes
+## Modelo 1 — Sin balancear, 100 árboles
+```{r rf1}
+set.seed(123)
+
+rf1 <- randomForest(
+  adolescente ~ .,
+  data = train_data,
+  ntree = 100
+)
+
+print(rf1)
+```
+
+
+
+```{r eval_rf1}
+rf_res1 <- evaluar_rf(
+  rf1,
+  test_data,
+  nombre_modelo = "RF1 – Sin balancear, 100 árboles"
+)
+```
+
+El modelo entrenado sin balanceo clasificó la totalidad de los registros como clase mayoritaria ("No"), obteniendo un recall y F1-score nulos para la clase positiva. Aunque la accuracy alcanzó el 98%, esta métrica resulta engañosa dado el fuerte desbalance de clases (98%/2%).
+
+El AUC-ROC de 0.4999 confirma que el modelo no posee capacidad discriminativa real, comportándose prácticamente como un clasificador aleatorio.
+
+Estos resultados evidencian que Random Forest, al igual que la regresión logística, colapsa hacia la clase mayoritaria cuando los datos no han sido balanceados previamente.
+
+
+
+## Modelo 2 — Con ROSE balanceado, 100 árboles
+
+```{r rf2}
+set.seed(123)
+
+rf2 <- randomForest(
+  adolescente ~ .,
+  data = train_balanced,
+  ntree = 100
+)
+
+print(rf2)
+```
+
+```{r eval_rf2}
+rf_res2 <- evaluar_rf(
+  rf2,
+  test_data,
+  nombre_modelo = "RF2 – ROSE balanceado, 100 árboles"
+)
+```
+
+Luego de aplicar balanceo mediante ROSE, el modelo logró detectar casos positivos reales, elevando el recall a 0.3293 y el F1-score a 0.1026.
+El AUC-ROC de 0.7236 supera al obtenido con regresión logística balanceada (0.7177), lo que sugiere que Random Forest captura mejor las relaciones no lineales entre variables sociodemográficas.
+
+La precisión del Random Forest continúa siendo baja (0.0608) como consecuencia directa del desbalance presente en el conjunto de prueba, que no fue modificado intencionalmente para reflejar la distribución real de la población.
+
+
+## Modelo 3 — Con ROSE balanceado, 200 árboles
+
+```{r rf3}
+set.seed(123)
+
+rf3 <- randomForest(
+  adolescente ~ .,
+  data = train_balanced,
+  ntree = 200
+)
+
+print(rf3)
+```
+
+```{r eval_rf3}
+rf_res3 <- evaluar_rf(
+  rf3,
+  test_data,
+  nombre_modelo = "RF3 – ROSE balanceado, 200 árboles"
+)
+```
+Incrementar el número de árboles de 100 a 200 produjo mejoras moderadas: el recall aumentó a 0.3409 y el AUC-ROC alcanzó 0.7285, el más alto entre todos los modelos del proyecto.
+El error OOB se redujo levemente (22.85% vs 22.93%), indicando mayor estabilidad.
+Sin embargo, las ganancias son marginales, lo que sugiere que el modelo comienza a estabilizarse y que aumentar aún más los árboles generaría rendimientos decrecientes sin un costo computacional justificado.
+
+
+
+# 16. Comparación de modelos Random Forest
+
+```{r comparacion_rf}
+resumen_rf <- data.frame(
+  Modelo    = c(rf_res1$nombre, rf_res2$nombre, rf_res3$nombre),
+
+  Accuracy  = c(
+    round(rf_res1$accuracy, 4),
+    round(rf_res2$accuracy, 4),
+    round(rf_res3$accuracy, 4)
+  ),
+
+  Precision = c(
+    ifelse(is.na(rf_res1$precision), 0, round(rf_res1$precision, 4)),
+    ifelse(is.na(rf_res2$precision), 0, round(rf_res2$precision, 4)),
+    ifelse(is.na(rf_res3$precision), 0, round(rf_res3$precision, 4))
+  ),
+
+  Recall = c(
+    round(rf_res1$recall, 4),
+    round(rf_res2$recall, 4),
+    round(rf_res3$recall, 4)
+  ),
+
+  F1 = c(
+    ifelse(is.na(rf_res1$f1), 0, round(rf_res1$f1, 4)),
+    ifelse(is.na(rf_res2$f1), 0, round(rf_res2$f1, 4)),
+    ifelse(is.na(rf_res3$f1), 0, round(rf_res3$f1, 4))
+  ),
+
+  AUC_ROC = c(
+    round(rf_res1$auc, 4),
+    round(rf_res2$auc, 4),
+    round(rf_res3$auc, 4)
+  )
+)
+
+print(resumen_rf)
+```
+El balanceo mediante ROSE resultó indispensable: sin él, el modelo es inútil para el objetivo del proyecto.
+RF3 fue seleccionado como modelo final por presentar el mayor AUC-ROC y el mejor recall, métricas prioritarias en un problema de salud pública donde los falsos negativos representan casos de maternidad adolescente no detectados.
+La diferencia entre RF2 y RF3 es marginal, pero RF3 ofrece mayor estabilidad y generalización.
+
+
+```{r grafica_rf}
+metricas_rf <- resumen_rf %>%
+  select(Modelo, F1, AUC_ROC) %>%
+  pivot_longer(cols = c(F1, AUC_ROC),
+               names_to = "Metrica",
+               values_to = "Valor")
+
+ggplot(metricas_rf,
+       aes(x = Modelo, y = Valor, fill = Metrica)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("#1f77b4", "#d62728")) +
+  labs(title = "Comparación de modelos – Random Forest",
+       x = NULL,
+       y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+```
+
+
+# 17. Curvas ROC comparativas – Random Forest
+```{r roc_rf}
+plot(rf_res1$roc,
+     col = "#888888",
+     lwd = 1.5,
+     main = "Curvas ROC – Random Forest")
+
+plot(rf_res2$roc,
+     col = "#1f77b4",
+     lwd = 2,
+     add = TRUE)
+
+plot(rf_res3$roc,
+     col = "#d62728",
+     lwd = 2,
+     add = TRUE)
+
+legend("bottomright",
+       legend = c(
+         paste0("RF1 sin balancear (AUC=", round(rf_res1$auc, 3), ")"),
+         paste0("RF2 ROSE 100 árboles (AUC=", round(rf_res2$auc, 3), ")"),
+         paste0("RF3 ROSE 200 árboles (AUC=", round(rf_res3$auc, 3), ")")
+       ),
+       col  = c("#888888", "#1f77b4", "#d62728"),
+       lwd  = 2,
+       cex  = 0.85)
+```
+Las curvas ROC reflejan con claridad el impacto del balanceo: RF1 se ubica prácticamente sobre la diagonal aleatoria (AUC cercano a 0.50), mientras que RF2 y RF3 muestran una capacidad discriminativa considerablemente superior.
+RF3 alcanzó el mejor AUC del proyecto (0.7285), superando tanto a RF1 como a todos los modelos de regresión logística evaluados.
+
+Esto confirma que Random Forest con datos balanceados constituye el modelo más adecuado para este problema.
+
+
+# 18. Modelo final seleccionado – Random Forest
+```{r modelo_final_rf}
+# Modelo seleccionado: RF3 – ROSE balanceado, 200 árboles
+print(rf_res3$cm)
+
+cm_rf <- as.data.frame(rf_res3$cm$table)
+names(cm_rf) <- c("Predicho", "Real", "Freq")
+
+ggplot(cm_rf, aes(x = Real, y = Predicho, fill = Freq)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = Freq), size = 5, fontface = "bold", color = "white") +
+  scale_fill_gradient(low = "#4292c6", high = "#08306b") +
+  labs(title = "Matriz de confusión – Modelo final Random Forest (RF3)",
+       x = "Valor real", y = "Valor predicho") +
+  theme_minimal()
+```
+
+RF3 — ROSE balanceado, 200 árboles.
+Este modelo es el seleccionado como modelo final entre los tres evaluados por alcanzar el mayor AUC-ROC del proyecto (0.7285) y el mejor recall entre los modelos Random Forest evaluados (0.3409), métricas prioritarias en un contexto de salud pública donde minimizar los falsos negativos es crítico.
+
+La matriz de confusión muestra que el modelo identificó correctamente 586 casos de maternidad adolescente, con un recall notablemente superior al obtenido sin balanceo.
+
+Si bien la precisión permanece baja (0.0602) como reflejo del desbalance real de la población en el conjunto de prueba, el modelo logra un equilibrio razonable entre sensibilidad y especificidad (Balanced Accuracy: 0.6176), superando en capacidad discriminativa a todos los modelos de regresión logística evaluados.
+
+# 19. Importancia de variables
+```{r importancia_rf}
+importance(rf3)
+
+varImpPlot(rf3,
+           main = "Importancia de variables – Random Forest")
+```
+Año de registro resultó la variable más importante por amplio margen (Gini: 29,383), lo que indica que el riesgo de maternidad adolescente presenta una tendencia temporal significativa en los datos.
+
+Le siguen departamento de residencia (8,283) y escolaridad materna (7,978), confirmando que la distribución geográfica y el nivel educativo son los factores sociodemográficos con mayor poder predictivo.
+El sitio de ocurrencia del parto contribuye de forma moderada (4,113), mientras que la pertenencia étnica mostró la menor importancia relativa (1,359), aunque sigue siendo un predictor relevante dentro del modelo.
+
+Estos resultados son consistentes con los odds ratios obtenidos en la regresión logística, donde departamentos como Izabal y El Progreso, junto con niveles bajos de escolaridad, presentaron las asociaciones más fuertes con maternidad adolescente.
+
+
+
+# 20. Naive Bayes
 
 El algoritmo Naive Bayes es un clasificador probabilístico basado en el Teorema de Bayes. Asume independencia condicional entre las variables predictoras y calcula la probabilidad de pertenencia a cada clase. Es un modelo simple, rápido y especialmente útil en problemas de clasificación con variables categóricas.
 
@@ -414,7 +687,6 @@ El algoritmo Naive Bayes es un clasificador probabilístico basado en el Teorema
 Este modelo se entrena utilizando el conjunto original sin corrección de desbalance. Se espera una accuracy alta pero bajo recall para la clase minoritaria.
 
 ```{r}
-library(caret)
 set.seed(123)
 
 idx_train <- createDataPartition(
@@ -425,8 +697,6 @@ idx_train <- createDataPartition(
 
 train_data <- df_modelo[idx_train, ]
 test_data  <- df_modelo[-idx_train, ]
-
-library(e1071)
 
 set.seed(123)
 
@@ -546,7 +816,7 @@ nb_res3 <- evaluar_nb(
 
 El suavizado de Laplace permitió evitar probabilidades iguales a cero en categorías poco frecuentes, mejorando ligeramente la estabilidad del modelo Naive Bayes. Aunque las mejoras numéricas respecto al Modelo 2 son pequeñas, el Modelo 3 obtuvo el mayor F1-score y AUC-ROC entre los modelos Naive Bayes evaluados, por lo que puede considerarse el mejor modelo dentro de esta familia.
 
-### conclusiones 
+### 21. Conclusiones - Naive Bayes
 
 La aplicación de modelos de clasificación permitió evaluar distintos enfoques para predecir la probabilidad de maternidad adolescente utilizando variables sociodemográficas y territoriales derivadas de los registros de nacimientos. Debido al fuerte desbalance del dataset — aproximadamente 98% de casos “No” y 2% de casos “Si” — los modelos entrenados sin técnicas de balanceo mostraron un desempeño engañosamente alto en accuracy, pero fueron incapaces de detectar correctamente la clase minoritaria.
 
@@ -557,3 +827,8 @@ Con el uso de ROSE, el Modelo 2 mejoró considerablemente su capacidad predictiv
 Comparando ambas familias de modelos, la regresión logística con ROSE presentó el mayor recall global, especialmente al reducir el threshold, mientras que Naive Bayes logró un F1-score ligeramente superior con un comportamiento más estable. Sin embargo, todos los modelos mantuvieron precisiones bajas debido al gran número de falsos positivos generados al intentar detectar una clase tan minoritaria. Esto refleja la dificultad inherente del problema y la limitada separabilidad entre clases utilizando únicamente las variables disponibles.
 
 En términos prácticos, los resultados muestran que el balanceo de clases es indispensable para modelar fenómenos raros como la maternidad adolescente. Los modelos balanceados fueron capaces de identificar patrones asociados a nivel educativo, grupo étnico, departamento y lugar de ocurrencia del nacimiento, variables que ya habían mostrado relevancia en el análisis exploratorio previo. Además, los odds ratios de la regresión logística confirmaron que niveles educativos más altos disminuyen significativamente la probabilidad de maternidad adolescente, mientras que ciertos departamentos presentan riesgos relativos mayores.
+
+
+# 22. Comparación global de algoritmos
+
+# 23. Conclusiones finales
