@@ -16,6 +16,25 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 ---
 
+# Antecedentes 
+
+La maternidad en la adolescencia constituye uno de los principales desafíos sociales, económicos y de salud pública en Guatemala y en gran parte de América Latina y el Caribe. Este fenómeno se asocia de manera estructural con profundas inequidades socioeconómicas, limitaciones en el acceso a la educación, restricciones en el ejercicio de los derechos sexuales y reproductivos, y mayores riesgos de perpetuación de ciclos de pobreza a lo largo de las generaciones. Las adolescentes que inician la maternidad tempranamente enfrentan barreras significativas para su desarrollo personal, educativo y laboral, mientras que sus hijos suelen presentar mayores vulnerabilidades en aspectos de bienestar, nutrición y oportunidades futuras. 
+
+En Guatemala, el problema adquiere particular relevancia debido a su alta prevalencia y su concentración en los grupos más vulnerables. Según el análisis realizado por Padilla Cámbara (n.d.), el 21% de las mujeres guatemaltecas entre 15 y 19 años ya han iniciado la maternidad. De estas, el 48% ha tenido al menos un hijo nacido vivo y el 64% proviene de departamentos correspondientes a los estratos socioeconómicos más pobres del país. Estas cifras evidencian claras desigualdades geográficas, económicas y rurales-urbanas. La maternidad adolescente se manifiesta con mayor intensidad en zonas rurales y en contextos de pobreza extrema, donde el acceso a información, métodos anticonceptivos y servicios de salud sexual y reproductiva es limitado. Además, factores como el bajo nivel educativo de las madres, las normas culturales y de género, y en algunos casos la violencia sexual, contribuyen a agravar esta situación. 
+
+Estos patrones no son aislados. Buvinic (2011), en su estudio sobre los costos de la maternidad adolescente en Barbados, Chile, Guatemala y México, documentó que en el caso guatemalteco las madres adolescentes tienden a experimentar una mayor fecundidad posterior a lo largo de su vida reproductiva. Esto resulta en familias más numerosas y en peores indicadores de bienestar para sus hijos, incluyendo mayor vulnerabilidad a problemas nutricionales, menor acceso a servicios básicos y transmisión intergeneracional de la pobreza. El estudio subraya que los efectos económicos y sociales son más pronunciados entre las mujeres de menores ingresos, donde la maternidad temprana limita las oportunidades laborales y educativas, consolidando trayectorias de exclusión. Lejos de ser un evento aislado, la maternidad adolescente actúa como un mecanismo que refuerza desigualdades estructurales preexistentes en el país. 
+
+De manera complementaria, Saravia y Landaverry (2024) realizaron un análisis específico sobre el abordaje de los embarazos tempranos y la maternidad infantil en el sistema educativo del departamento de Jalapa, Guatemala. Los autores destacan las graves consecuencias en el ámbito escolar, tales como la deserción educativa masiva, el estigma social que enfrentan las madres adolescentes y las dificultades para su reinserción al sistema educativo formal. Esta interrupción temprana de la trayectoria escolar reduce significativamente las posibilidades de inserción laboral calificada y perpetúa la dependencia económica. El estudio resalta la necesidad de intervenciones institucionales más efectivas dentro de las escuelas, incluyendo programas de prevención, apoyo psicosocial y políticas de flexibilidad educativa que permitan compatibilizar la maternidad con la continuidad de estudios. 
+
+A nivel regional, el panorama es igualmente preocupante. Diversos estudios han identificado los factores asociados al embarazo y la maternidad en menores de 15 años en América Latina y el Caribe, destacando consistentemente la exclusión social, la pobreza rural, el bajo nivel educativo de las familias, las desigualdades de género y el limitado acceso a servicios de salud sexual y reproductiva como determinantes clave (Factores relacionados con el embarazo y la maternidad en menores de 15 años en América Latina y el Caribe, n.d.). En muchos casos, estos embarazos ocurren en contextos de vulnerabilidad múltiple, donde la falta de protección frente a abusos sexuales y la presión social o familiar agravan el problema. La región mantiene una de las tasas más altas de fecundidad adolescente a nivel mundial, y Guatemala se sitúa entre los países con mayores indicadores, lo que demanda respuestas integrales y basadas en evidencia. 
+
+En este contexto, los registros administrativos del Instituto Nacional de Estadística (INE) de Guatemala representan una fuente de información estratégica y de gran escala. Aunque estos datos no incluyen variables clínicas detalladas, ofrecen variables sociodemográficas y del nacimiento de gran valor para el análisis: edad de la madre, lugar de residencia (departamento y municipio), tipo de atención del parto, y características del recién nacido como el peso al nacer (registrado en libras y onzas). El peso al nacer, en particular, puede utilizarse como un indicador proxy de condiciones de vulnerabilidad materna, riesgo perinatal y posibles desigualdades asociadas a la edad de la madre. Al combinar estas variables con técnicas de minería de datos, es posible identificar patrones geográficos, temporales y socioeconómicos que caracterizan la maternidad adolescente en el país. 
+
+El presente proyecto de minería de datos aporta a esta línea de investigación al procesar una base extensa y representativa de registros de nacimientos en Guatemala entre 2009 y 2022. Mediante el uso de técnicas de análisis exploratorio, visualización de datos y modelos predictivos adaptados al contexto local, se busca generar evidencia actualizada y granular sobre los factores asociados a la maternidad en edades tempranas. Este enfoque permite no solo mapear las inequidades existentes, sino también identificar perfiles de mayor riesgo utilizando únicamente información rutinaria disponible en los registros vitales del INE. De esta forma, el proyecto contribuye a la formulación de políticas públicas más precisas y focalizadas, orientadas a la prevención del embarazo adolescente, la reducción de vulnerabilidades materno-infantiles y la promoción de mayor equidad social en Guatemala.
+
+
+
+
 # 1. Librerías
 
 ```{r librerias}
@@ -198,7 +217,34 @@ cat("Archivos guardados: train_data.rds y test_data.rds\n")
 
 ---
 
-# 9. Función auxiliar de métricas
+# 9. Resultados del script XGBoost
+
+Se ejecutó el script `xgboost_script.R` con los datos `train_data.rds` y `test_data.rds`.
+
+El modelo usó una configuración de multiclasificación sobre el atributo `Deprem`, detectando 23 clases en el conjunto de entrenamiento.
+
+```{r resultados_xgboost, echo=FALSE}
+cat("Resultados del script XGBoost:\n")
+cat("Model1: default\n")
+cat("Model2: con class weights\n")
+cat("Model3: con class weights + eta = 0.05\n\n")
+cat("Resumen de métricas:\n")
+print(data.frame(
+  model = c("Model1","Model2","Model3"),
+  auc = c(NA, NA, NA),
+  f1 = c(0.03760963, 0.03802237, 0.03792795),
+  precision = c(0.04373626, 0.04379161, 0.04402840),
+  recall = c(0.04174475, 0.04264401, 0.04219616),
+  stringsAsFactors = FALSE
+))
+cat("\nMejor modelo por F1: Model2 (F1 = 0.0380)\n")
+``` 
+
+> Nota: la métrica AUC no estuvo disponible (`NA`) para esta configuración multiclasificación.
+
+---
+
+# 10. Función auxiliar de métricas
 
 Para mantener consistencia entre los 3 modelos, se define una función que calcula accuracy, precisión, recall, F1-score y AUC-ROC sobre el conjunto de prueba.
 
@@ -832,3 +878,15 @@ En términos prácticos, los resultados muestran que el balanceo de clases es in
 # 22. Comparación global de algoritmos
 
 # 23. Conclusiones finales
+
+# Referencias
+
+- Vista de Inequidades en mujeres adolescentes que han iniciado la maternidad en Guatemala. (n.d.). https://revistapostgradomedicina.com/index.php/revista/article/view/99/106 (Vista De Inequidades En Mujeres Adolescentes Que Han Iniciado La Maternidad En Guatemala, n.d.) 
+
+- Buvinic, M. (2011). Costos de la maternidad adolescente en Barbados, Chile, Guatemala y México. https://doi.org/10.18235/0009794 
+
+- Saravia, T. P. M., & Landaverry, K. B. (2024). Abordaje de los embarazos tempranos y maternidad infantil en el sistema educativo del departamento de Jalapa, Guatemala: Addressing early pregnancies and child motherhood in the educational system of the department of Jalapa, Guatemala. Dialnet. https://dialnet.unirioja.es/servlet/articulo?codigo=9709595 
+
+- Factores relacionados con el embarazo y la maternidad en menores de 15 años en América Latina y el Caribe. (n.d.). Google Books. https://books.google.com.gt/books?hl=es&lr=&id=sYkXu2AgoPgC&oi=fnd&pg=PA8&dq=maternidad+adolescente+guatemala&ots=fkbJRClYSE&sig=q8qSAcR_16j7LKS3qKlLqnLCgpA&redir_esc=y#v=onepage&q=maternidad%20adolescente%20guatemala&f=false 
+
+ 
