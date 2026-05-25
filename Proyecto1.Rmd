@@ -935,7 +935,7 @@ mejores <- data.frame(
 print(mejores)
 
 library(tidyr)
-mejores_long %
+mejores_long <- mejores %>%
   select(Algoritmo, Recall, F1, AUC_ROC) %>%
   pivot_longer(cols = c(Recall, F1, AUC_ROC),
                names_to  = "Metrica",
