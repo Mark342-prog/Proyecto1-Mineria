@@ -219,28 +219,52 @@ cat("Archivos guardados: train_data.rds y test_data.rds\n")
 
 # 9. Resultados del script XGBoost
 
-Se ejecutó el script `xgboost_script.R` con los datos `train_data.rds` y `test_data.rds`.
-
-El modelo usó una configuración de multiclasificación sobre el atributo `Deprem`, detectando 23 clases en el conjunto de entrenamiento.
+Se ejecutó un script en R para entrenar tres variantes de XGBoost sobre el conjunto de datos `train_data.rds` y evaluarlo en `test_data.rds`. El objetivo es predecir la variable `Deprem` (o equivalente), que presenta 23 clases.
 
 ```{r resultados_xgboost, echo=FALSE}
-cat("Resultados del script XGBoost:\n")
-cat("Model1: default\n")
-cat("Model2: con class weights\n")
-cat("Model3: con class weights + eta = 0.05\n\n")
-cat("Resumen de métricas:\n")
-print(data.frame(
-  model = c("Model1","Model2","Model3"),
-  auc = c(NA, NA, NA),
-  f1 = c(0.03760963, 0.03802237, 0.03792795),
-  precision = c(0.04373626, 0.04379161, 0.04402840),
-  recall = c(0.04174475, 0.04264401, 0.04219616),
-  stringsAsFactors = FALSE
-))
-cat("\nMejor modelo por F1: Model2 (F1 = 0.0380)\n")
-``` 
+# 9. Resultados del script XGBoost
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
-> Nota: la métrica AUC no estuvo disponible (`NA`) para esta configuración multiclasificación.
+library(knitr)
+library(kableExtra)
+```
+
+## 9.1 Configuración de los Modelos
+- Model 1: XGBoost por defecto (sin balanceo explícito).
+- Model 2: XGBoost con `weight` por clase (`scale_pos_weight` equivalente en multiclass).
+- Model 3: XGBoost con pesos por clase + `eta = 0.05` (learning rate más conservador) y más rondas (200).
+
+Parámetros comunes: `max_depth = 6`, `nthread` según cores disponibles, `early_stopping_rounds = 20`.
+
+## 9.2 Métricas Globales (Macro Average)
+```
+resultados <- data.frame(
+  Modelo = c("Model 1: Default", "Model 2: Class Weights", "Model 3: Class Weights + Low LR"),
+  AUC = c(NA, NA, NA),
+  Precision_Macro = c(0.0437, 0.0438, 0.0440),
+  Recall_Macro   = c(0.0417, 0.0426, 0.0422),
+  F1_Macro       = c(0.0376, 0.0380, 0.0379)
+)
+
+kable(resultados, digits = 4, caption = "Métricas macro-average en conjunto de test") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+Interpretación:
+
+- El rendimiento general es bajo. Con 23 clases, un clasificador aleatorio tendría un accuracy esperado cercano al 4.35% y un F1-macro similar.
+- El Model 2 (con class weights) es ligeramente superior en F1-macro (0.0380), aunque las diferencias son muy pequeñas.
+- La métrica AUC aparece como `NA` porque `pROC::multiclass.auc` tiene limitaciones prácticas con un alto número de clases (23). En estos casos es más recomendable usar One-vs-Rest AUC o macro-averaged AUC manualmente.
+
+## 9.3 Análisis del Problema
+Un F1-macro tan bajo (~0.038) indica que el modelo tiene serias dificultades para distinguir las clases. Posibles causas:
+
+- Desbalanceo extremo de clases (muy común en datos de "Deprem" o categorías de daño/sismo).
+- Solapamiento alto entre clases (las 23 categorías pueden no ser fácilmente separables con las features actuales).
+- Insuficiente poder predictivo de las variables (poca señal).
+- Alta cardinalidad o ruido en las features categóricas.
+- Número de clases demasiado alto para el tamaño de muestra disponible.
+
+
 
 ---
 
