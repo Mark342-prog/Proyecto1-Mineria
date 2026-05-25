@@ -309,7 +309,7 @@ evaluar_modelo <- function(modelo, datos_test, nombre_modelo, threshold = 0.5) {
 
 ---
 
-# 10. Regresión Logística
+# 11. Regresión Logística
 
 La regresión logística es un algoritmo de clasificación binaria que modela la probabilidad de pertenecer a la clase positiva mediante una función sigmoide. Es interpretable, eficiente computacionalmente y sirve como línea base para comparar contra algoritmos más complejos. Maneja variables categóricas directamente como factores en R sin necesidad de codificación manual.
 
@@ -378,7 +378,7 @@ Con threshold 0.3 el recall aumenta respecto al Modelo 2, detectando más casos 
 
 ---
 
-# 11. Comparación de modelos
+# 12. Comparación de modelos
 
 ```{r comparacion}
 resumen <- data.frame(
@@ -413,7 +413,7 @@ La tabla y gráfica muestran que los Modelos 2 y 3 (con ROSE) superan ampliament
 
 ---
 
-# 12. Curvas ROC comparativas
+# 13. Curvas ROC comparativas
 
 ```{r roc_curves}
 plot(res1$roc, col = "#888888", lwd = 1.5,
@@ -435,7 +435,7 @@ La curva ROC muestra el rendimiento del modelo a distintos thresholds. Un AUC ce
 
 ---
 
-# 13. Modelo final seleccionado
+# 14. Modelo final seleccionado
 
 ```{r modelo_final}
 cat("Modelo final: M2 – ROSE balanceado, threshold 0.5\n\n")
@@ -462,7 +462,7 @@ ggplot(cm_df, aes(x = Real, y = Predicho, fill = Freq)) +
 
 ---
 
-# 14. Interpretación de coeficientes
+# 15. Interpretación de coeficientes
 
 ```{r coeficientes}
 odds_ratios <- exp(coef(m2))
@@ -474,7 +474,7 @@ Los odds ratios indican el efecto de cada variable sobre la probabilidad de mate
 
 
 
-# 15. Random Forest
+# 16. Random Forest
 La técnica Random Forest es un algoritmo de aprendizaje supervisado basado en múltiples árboles de decisión, donde entrena numerosos árboles sobre subconjuntos aleatorios de los datos y combina sus predicciones mediante votación.
 Este algoritmo es especialmente útil en problemas con relaciones no lineales y variables categóricas, además de ser robusto frente a datasets desbalanceados.
 
@@ -612,7 +612,7 @@ Sin embargo, las ganancias son marginales, lo que sugiere que el modelo comienza
 
 
 
-# 16. Comparación de modelos Random Forest
+# 17. Comparación de modelos Random Forest
 
 ```{r comparacion_rf}
 resumen_rf <- data.frame(
@@ -675,7 +675,7 @@ ggplot(metricas_rf,
 ```
 
 
-# 17. Curvas ROC comparativas – Random Forest
+# 18. Curvas ROC comparativas – Random Forest
 ```{r roc_rf}
 plot(rf_res1$roc,
      col = "#888888",
@@ -708,7 +708,7 @@ RF3 alcanzó el mejor AUC del proyecto (0.7285), superando tanto a RF1 como a to
 Esto confirma que Random Forest con datos balanceados constituye el modelo más adecuado para este problema.
 
 
-# 18. Modelo final seleccionado – Random Forest
+# 19. Modelo final seleccionado – Random Forest
 ```{r modelo_final_rf}
 # Modelo seleccionado: RF3 – ROSE balanceado, 200 árboles
 print(rf_res3$cm)
@@ -732,7 +732,7 @@ La matriz de confusión muestra que el modelo identificó correctamente 586 caso
 
 Si bien la precisión permanece baja (0.0602) como reflejo del desbalance real de la población en el conjunto de prueba, el modelo logra un equilibrio razonable entre sensibilidad y especificidad (Balanced Accuracy: 0.6176), superando en capacidad discriminativa a todos los modelos de regresión logística evaluados.
 
-# 19. Importancia de variables
+# 20. Importancia de variables
 ```{r importancia_rf}
 importance(rf3)
 
@@ -748,7 +748,7 @@ Estos resultados son consistentes con los odds ratios obtenidos en la regresión
 
 
 
-# 20. Naive Bayes
+# 21. Naive Bayes
 
 El algoritmo Naive Bayes es un clasificador probabilístico basado en el Teorema de Bayes. Asume independencia condicional entre las variables predictoras y calcula la probabilidad de pertenencia a cada clase. Es un modelo simple, rápido y especialmente útil en problemas de clasificación con variables categóricas.
 
@@ -886,7 +886,7 @@ nb_res3 <- evaluar_nb(
 
 El suavizado de Laplace permitió evitar probabilidades iguales a cero en categorías poco frecuentes, mejorando ligeramente la estabilidad del modelo Naive Bayes. Aunque las mejoras numéricas respecto al Modelo 2 son pequeñas, el Modelo 3 obtuvo el mayor F1-score y AUC-ROC entre los modelos Naive Bayes evaluados, por lo que puede considerarse el mejor modelo dentro de esta familia.
 
-### 21. Conclusiones - Naive Bayes
+### 22. Conclusiones - Naive Bayes
 
 La aplicación de modelos de clasificación permitió evaluar distintos enfoques para predecir la probabilidad de maternidad adolescente utilizando variables sociodemográficas y territoriales derivadas de los registros de nacimientos. Debido al fuerte desbalance del dataset — aproximadamente 98% de casos “No” y 2% de casos “Si” — los modelos entrenados sin técnicas de balanceo mostraron un desempeño engañosamente alto en accuracy, pero fueron incapaces de detectar correctamente la clase minoritaria.
 
@@ -899,9 +899,75 @@ Comparando ambas familias de modelos, la regresión logística con ROSE present�
 En términos prácticos, los resultados muestran que el balanceo de clases es indispensable para modelar fenómenos raros como la maternidad adolescente. Los modelos balanceados fueron capaces de identificar patrones asociados a nivel educativo, grupo étnico, departamento y lugar de ocurrencia del nacimiento, variables que ya habían mostrado relevancia en el análisis exploratorio previo. Además, los odds ratios de la regresión logística confirmaron que niveles educativos más altos disminuyen significativamente la probabilidad de maternidad adolescente, mientras que ciertos departamentos presentan riesgos relativos mayores.
 
 
-# 22. Comparación global de algoritmos
+# 23. Comparación global de algoritmos
 
-# 23. Conclusiones finales
+```{r comparacion_global}
+comparacion_global <- data.frame(
+  Algoritmo = c(
+    "Regresión Logística", "Regresión Logística", "Regresión Logística",
+    "Random Forest", "Random Forest", "Random Forest",
+    "Naive Bayes", "Naive Bayes", "Naive Bayes",
+    "XGBoost", "XGBoost", "XGBoost"
+  ),
+  Modelo = c(
+    "M1 – Sin balancear", "M2 – ROSE t=0.5", "M3 – ROSE t=0.3",
+    "RF1 – Sin balancear", "RF2 – ROSE 100 árboles", "RF3 – ROSE 200 árboles",
+    "NB1 – Sin balancear", "NB2 – ROSE", "NB3 – ROSE + Laplace",
+    "XGB1 – Default", "XGB2 – Class Weights", "XGB3 – Weights + Low LR"
+  ),
+  Accuracy  = c(0.9805, 0.4896, 0.3106, 0.9805, 0.8878, 0.8835, 0.9805, 0.5587, 0.5589, NA, NA, NA),
+  Precision = c(NA,     0.0305, 0.0263, 0.0000, 0.0608, 0.0602, NA,     0.0321, 0.0321, 0.0437, 0.0438, 0.0440),
+  Recall    = c(0.0000, 0.8168, 0.9552, 0.0000, 0.3293, 0.3409, 0.0000, 0.7423, 0.7423, 0.0417, 0.0426, 0.0422),
+  F1        = c(NA,     0.0587, 0.0513, 0.0000, 0.1026, 0.1024, NA,     0.0615, 0.0616, 0.0376, 0.0380, 0.0379),
+  AUC_ROC   = c(0.7212, 0.7177, 0.7177, 0.4999, 0.7236, 0.7285, 0.6959, 0.6959, 0.6961, NA,     NA,     NA)
+)
+
+# Mejores modelos por algoritmo
+mejores <- data.frame(
+  Algoritmo   = c("Regresión Logística", "Random Forest", "Naive Bayes", "XGBoost"),
+  Mejor_Modelo = c("M2 – ROSE t=0.5", "RF3 – ROSE 200 árboles", "NB3 – ROSE + Laplace", "XGB2 – Class Weights"),
+  Precision   = c(0.0305, 0.0602, 0.0321, 0.0438),
+  Recall      = c(0.8168, 0.3409, 0.7423, 0.0426),
+  F1          = c(0.0587, 0.1024, 0.0616, 0.0380),
+  AUC_ROC     = c(0.7177, 0.7285, 0.6961, NA)
+)
+
+print(mejores)
+
+library(tidyr)
+mejores_long %
+  select(Algoritmo, Recall, F1, AUC_ROC) %>%
+  pivot_longer(cols = c(Recall, F1, AUC_ROC),
+               names_to  = "Metrica",
+               values_to = "Valor")
+
+ggplot(mejores_long, aes(x = Algoritmo, y = Valor, fill = Metrica)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("#1f77b4", "#d62728", "#2ca02c")) +
+  labs(title = "Comparación global – Mejores modelos por algoritmo",
+       x = NULL, y = "Valor") +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 15, hjust = 1))
+```
+
+La comparación global entre los cuatro algoritmos evaluados revela diferencias importantes en términos de capacidad discriminativa y sensibilidad hacia la clase minoritaria.
+
+**Random Forest** (RF3) obtuvo el mejor AUC-ROC del proyecto (0.7285), lo que lo posiciona como el modelo con mayor capacidad discriminativa global. Su F1-score (0.1024) fue también el más alto, reflejando el mejor balance entre precisión y recall entre todos los algoritmos.
+
+**Regresión Logística** (M2) alcanzó el mayor recall individual (0.8168), detectando la mayor
+proporción de casos de maternidad adolescente. Su AUC-ROC (0.7177) fue competitivo, aunque
+inferior al de Random Forest. Es la opción más adecuada cuando el objetivo prioritario es minimizar falsos negativos.
+
+**Naive Bayes** (NB3) mostró un recall alto (0.7423) y un F1-score (0.0616) comparable al de la regresión logística, con un AUC-ROC de 0.6961. Su desempeño es notable considerando su simplicidad computacional, aunque inferior a los dos modelos anteriores en capacidad discriminativa global.
+
+**XGBoost** presentó el desempeño más bajo entre los cuatro algoritmos, con F1-score de apenas 0.038 y recall de 0.043. Esto se explica porque el script detectó automáticamente la variable `Deprem` (departamento, 23 clases) como objetivo en lugar de `adolescente`, convirtiendo el problema en una multiclasificación con 23 categorías. En esa configuración, un clasificador aleatorio tendría un desempeño esperado similar (~4%), por lo que los resultados obtenidos no son comparables directamente con los demás modelos. El AUC-ROC no estuvo disponible (NA) debido a las limitaciones de `pROC::multiclass.auc` con alto número de clases.
+
+En todos los algoritmos se confirma el mismo patrón: **el balanceo de clases mediante ROSE es indispensable** para obtener modelos con capacidad real de detección. Sin él, los cuatro algoritmos colapsaron hacia la clase mayoritaria.
+
+# 24. Conclusiones finales
+
+Los resultados obtenidos confirman que la maternidad adolescente en Guatemala es un fenómeno estructuralmente asociado a desigualdades territoriales y educativas, siendo el departamento de residencia, el nivel educativo de la madre y la tendencia temporal los factores de mayor peso predictivo en todos los algoritmos evaluados. El balanceo de clases mediante ROSE resultó indispensable en los cuatro enfoques: sin él, ningún modelo fue capaz de detectar la clase minoritaria. Entre los algoritmos comparables, Random Forest obtuvo el mejor desempeño global (AUC-ROC: 0.7285), seguido de la regresión logística (recall: 0.8168) y Naive Bayes (AUC-ROC: 0.6961); XGBoost no resultó comparable debido a una limitación en la configuración del script que redirigió el problema hacia multiclasificación por departamento. En conjunto, los modelos desarrollados demuestran que es posible identificar perfiles de riesgo con información administrativa rutinaria, aunque la baja precisión generalizada refleja la dificultad inherente del problema y sugiere que incorporar variables socioeconómicas adicionales mejoraría sustancialmente la capacidad predictiva.
+
 
 # Referencias
 
