@@ -3,11 +3,11 @@ title: "Proyecto 2 – Maternidad Adolescente en Guatemala (2009–2023)"
 author: "Grupo 6"
 date: "`r Sys.Date()`"
 output:
-  pdf_document:
-    toc: true
   html_document:
     toc: true
     toc_float: true
+  pdf_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -219,7 +219,9 @@ cat("Archivos guardados: train_data.rds y test_data.rds\n")
 
 # 9. Resultados del script XGBoost
 
-Se ejecutó un script en R para entrenar tres variantes de XGBoost sobre el conjunto de datos `train_data.rds` y evaluarlo en `test_data.rds`. El objetivo es predecir la variable `Deprem` (o equivalente), que presenta 23 clases.
+Se ejecutó un script en R para entrenar tres variantes de XGBoost sobre el conjunto de datos `train_data.rds` y evaluarlo en `test_data.rds`. Durante las pruebas iniciales, el script detectó automáticamente la variable `Deprem` como objetivo, convirtiendo el problema en una tarea de multiclasificación de 23 clases.
+
+Debido a que el objetivo principal del proyecto es predecir la variable binaria `adolescente`, los resultados de XGBoost deben interpretarse únicamente como una evaluación exploratoria adicional y no como una comparación directa con los demás algoritmos. Aun así, el experimento permitió analizar el comportamiento del algoritmo frente a clases múltiples y desbalanceadas.
 
 ```{r resultados_xgboost, echo=FALSE}
 # 9. Resultados del script XGBoost
@@ -960,7 +962,9 @@ inferior al de Random Forest. Es la opción más adecuada cuando el objetivo pri
 
 **Naive Bayes** (NB3) mostró un recall alto (0.7423) y un F1-score (0.0616) comparable al de la regresión logística, con un AUC-ROC de 0.6961. Su desempeño es notable considerando su simplicidad computacional, aunque inferior a los dos modelos anteriores en capacidad discriminativa global.
 
-**XGBoost** presentó el desempeño más bajo entre los cuatro algoritmos, con F1-score de apenas 0.038 y recall de 0.043. Esto se explica porque el script detectó automáticamente la variable `Deprem` (departamento, 23 clases) como objetivo en lugar de `adolescente`, convirtiendo el problema en una multiclasificación con 23 categorías. En esa configuración, un clasificador aleatorio tendría un desempeño esperado similar (~4%), por lo que los resultados obtenidos no son comparables directamente con los demás modelos. El AUC-ROC no estuvo disponible (NA) debido a las limitaciones de `pROC::multiclass.auc` con alto número de clases.
+**XGBoost** presentó el desempeño más bajo entre los algoritmos evaluados, con F1-score de apenas 0.038 y recall de 0.043. Sin embargo, estos resultados no son directamente comparables con los demás modelos debido a que el algoritmo fue ejecutado sobre una tarea de multiclasificación utilizando `Deprem` como variable objetivo.
+
+Esta situación fue identificada y documentada como una limitación metodológica del proyecto. A pesar de ello, el experimento permitió observar las dificultades que enfrenta XGBoost en escenarios con alta cardinalidad de clases y fuerte desbalance. En futuros trabajos sería recomendable ejecutar nuevamente el algoritmo utilizando la variable binaria `adolescente` para realizar una comparación completamente homogénea.
 
 En todos los algoritmos se confirma el mismo patrón: **el balanceo de clases mediante ROSE es indispensable** para obtener modelos con capacidad real de detección. Sin él, los cuatro algoritmos colapsaron hacia la clase mayoritaria.
 
