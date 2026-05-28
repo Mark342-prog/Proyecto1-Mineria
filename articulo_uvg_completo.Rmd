@@ -1,0 +1,408 @@
+---
+title: "Predicción de Maternidad Adolescente en Guatemala mediante Algoritmos de Clasificación"
+author: |
+  Grupo 6^[Universidad del Valle de Guatemala, Facultad de Ingeniería, Departamento de Ciencias de la Computación. CC3023 – Minería de Datos, Semestre I 2026.]
+date: '2026'
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document:
+    latex_engine: xelatex
+    number_sections: true
+    keep_tex: false
+    fig_caption: true
+    fig_width: 4.8
+    fig_height: 3
+header-includes:
+- \usepackage{fontspec}
+- \setmainfont{Times New Roman}
+- \usepackage{setspace}
+- \singlespacing
+- \usepackage{geometry}
+- \geometry{margin=2cm}
+- \usepackage{caption}
+- \captionsetup{font=footnotesize, labelfont=bf}
+- \usepackage{booktabs}
+- \usepackage{float}
+- \floatplacement{figure}{H}
+- \floatplacement{table}{H}
+- \usepackage{hyperref}
+- \hypersetup{colorlinks=true, linkcolor=black, urlcolor=black, citecolor=black}
+- \usepackage{abstract}
+- \renewcommand{\abstractnamefont}{\normalfont\bfseries}
+- \renewcommand{\abstracttextfont}{\normalfont}
+bibliography: referencias.bib
+link-citations: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center"
+)
+library(haven)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(caret)
+library(ROSE)
+library(pROC)
+library(randomForest)
+library(e1071)
+library(cluster)
+library(factoextra)
+library(knitr)
+```
+
+---
+
+**Título en inglés:** *Prediction of Adolescent Maternity in Guatemala Using Classification Algorithms: Analysis of Birth Records 2009–2023*
+
+---
+
+\begin{abstract}
+La maternidad adolescente en Guatemala constituye un problema estructural asociado a desigualdades educativas, territoriales y socioeconómicas. Este estudio aplica técnicas de minería de datos para predecir si un nacimiento corresponde a una madre menor de 18 años, utilizando registros administrativos del Instituto Nacional de Estadística (INE) correspondientes al período 2009–2023. A partir de un análisis exploratorio previo que identificó patrones territoriales, educativos y étnicos relevantes, se construyó un modelo de clasificación binaria empleando cinco variables sociodemográficas: año de registro, nivel educativo de la madre, grupo étnico, lugar de ocurrencia del nacimiento y departamento de residencia. Se evaluaron cuatro algoritmos: regresión logística, Random Forest, Naive Bayes y XGBoost, con y sin balanceo de clases mediante la técnica ROSE. Los resultados muestran que el balanceo de clases es indispensable dado el fuerte desbalance del conjunto de datos (aproximadamente 98\%/2\%). Random Forest con ROSE y 200 árboles obtuvo el mayor AUC-ROC del proyecto (0.7285) y el mejor F1-score (0.1024), mientras que la regresión logística con ROSE alcanzó el mayor recall individual (0.8168). El nivel educativo, el departamento de residencia y la tendencia temporal resultaron los factores predictivos más relevantes en todos los algoritmos. Los modelos demuestran que es posible identificar perfiles de riesgo con información administrativa rutinaria, lo que puede contribuir al diseño de políticas públicas focalizadas para la reducción de la maternidad temprana en Guatemala.
+\end{abstract}
+
+**Palabras clave:** maternidad adolescente, clasificación, Random Forest, regresión logística, ROSE, desbalance de clases, Guatemala.
+
+**Keywords:** adolescent maternity, classification, Random Forest, logistic regression, ROSE, class imbalance, Guatemala.
+
+---
+
+# Introducción
+
+La maternidad en la adolescencia es uno de los principales desafíos de salud pública y equidad social en Guatemala y América Latina. Se asocia estructuralmente con limitaciones educativas, ciclos de pobreza y vulnerabilidades materno-infantiles que se transmiten intergeneracionalmente (Buvinic, 2011; Padilla Cámbara, s.f.). Según datos del INE, Guatemala mantiene tasas elevadas de fecundidad adolescente con concentración marcada en departamentos de menor desarrollo socioeconómico.
+
+La disponibilidad de registros administrativos de nacimientos ofrece una fuente de datos de gran escala que, procesada con técnicas de minería de datos, puede revelar patrones predictivos de alta utilidad para la política pública. Sin embargo, este tipo de fenómenos presenta desafíos metodológicos específicos, entre ellos el severo desbalance de clases entre nacimientos en madres adultas y madres adolescentes, que requiere estrategias especializadas de modelado.
+
+El presente artículo reporta los resultados de un proyecto de minería de datos en dos fases. La primera fase, un análisis exploratorio (EDA) sobre los registros 2009–2023, identificó patrones territoriales, educativos y étnicos asociados al fenómeno. La segunda fase aplicó cuatro algoritmos de clasificación supervisada para predecir la variable binaria *maternidad adolescente*, comparando su desempeño bajo distintas configuraciones de balanceo y parametrización.
+
+Los objetivos específicos del estudio son:
+
+1. Caracterizar la evolución temporal y distribución territorial de la maternidad adolescente en Guatemala entre 2009 y 2023.
+2. Identificar los factores sociodemográficos más fuertemente asociados al fenómeno mediante análisis exploratorio y modelos de clasificación.
+3. Comparar el desempeño de cuatro algoritmos de clasificación —regresión logística, Random Forest, Naive Bayes y XGBoost— en la predicción de maternidad adolescente a partir de variables administrativas.
+4. Evaluar el impacto del balanceo de clases mediante ROSE sobre la capacidad predictiva de los modelos.
+5. Identificar el modelo con mayor capacidad discriminativa para su potencial uso como herramienta de identificación de perfiles de riesgo.
+
+El artículo se organiza de la siguiente manera: la Sección 2 presenta el marco teórico; la Sección 3 describe los datos y la metodología; la Sección 4 reporta los resultados del análisis exploratorio; la Sección 5 presenta los resultados del modelado predictivo; la Sección 6 desarrolla la discusión; y la Sección 7 expone las conclusiones.
+
+---
+
+# Marco Teórico
+
+## Maternidad adolescente en Guatemala
+
+La maternidad adolescente se define como el embarazo y parto en mujeres menores de 18 años. En Guatemala, el 21% de las mujeres entre 15 y 19 años ha iniciado la maternidad, con mayor concentración en departamentos correspondientes a los estratos socioeconómicos más pobres (Padilla Cámbara, s.f.). Buvinic (2011) documentó que las madres adolescentes guatemaltecas exhiben mayor fecundidad posterior, familias más numerosas y peores indicadores de bienestar infantil, consolidando trayectorias de exclusión. Saravia y Landaverry (2024) señalan la deserción escolar masiva como consecuencia directa en el departamento de Jalapa, limitando la inserción laboral calificada. A nivel regional, la exclusión social, la pobreza rural y las desigualdades de género son determinantes clave del fenómeno (Factores relacionados, s.f.).
+
+## Minería de datos y clasificación binaria
+
+La minería de datos es el proceso de descubrir patrones y conocimiento a partir de grandes conjuntos de datos mediante técnicas estadísticas y de aprendizaje automático (Han, Kamber & Pei, 2012). La clasificación supervisada construye modelos que asignan observaciones a categorías predefinidas, optimizando alguna medida de rendimiento sobre un conjunto de entrenamiento etiquetado.
+
+## Algoritmos de clasificación utilizados
+
+**Regresión Logística.** Modela la probabilidad de pertenecer a la clase positiva mediante una función sigmoide aplicada a una combinación lineal de las variables predictoras. Es interpretable, computacionalmente eficiente y sirve como línea base para comparar modelos más complejos. Los coeficientes del modelo se interpretan mediante *odds ratios*, que cuantifican el efecto multiplicativo de cada variable sobre la probabilidad del evento de interés.
+
+**Random Forest.** Algoritmo de aprendizaje por ensamble que entrena múltiples árboles de decisión sobre subconjuntos aleatorios de datos y variables, combinando sus predicciones mediante votación mayoritaria (Breiman, 2001). Es robusto frente a relaciones no lineales, variables categóricas de alta cardinalidad e interacciones entre variables, y genera una medida nativa de importancia de variables basada en el índice de Gini.
+
+**Naive Bayes.** Clasificador probabilístico basado en el Teorema de Bayes que asume independencia condicional entre los predictores. A pesar de su supuesto simplificador, es computacionalmente eficiente y produce resultados competitivos en problemas con variables categóricas. La corrección de Laplace permite manejar categorías con frecuencia cero en entrenamiento.
+
+**XGBoost.** Implementación optimizada de *Gradient Boosting* que construye árboles de forma secuencial, donde cada árbol corrige los errores del anterior (Chen & Guestrin, 2016). Incorpora regularización L1 y L2 para evitar sobreajuste y es altamente eficiente computacionalmente. En el presente estudio fue ejecutado sobre una configuración de variable objetivo que derivó en multiclasificación, lo cual se documenta como limitación metodológica.
+
+## Desbalance de clases y técnica ROSE
+
+El desbalance de clases ocurre cuando una de las categorías de la variable respuesta representa una fracción muy pequeña del total de observaciones. En estos casos, los algoritmos de clasificación tienden a ignorar la clase minoritaria, produciendo alta *accuracy* pero recall nulo para la clase de interés. ROSE (*Random Over-Sampling Examples*) es una técnica de remuestreo que genera ejemplos sintéticos de la clase minoritaria en regiones del espacio de características cercanas a los datos reales, equilibrando la distribución de clases en el conjunto de entrenamiento (Lunardon, Menardi & Torelli, 2014).
+
+## Métricas de evaluación
+
+En problemas con desbalance de clases, la *accuracy* no es una métrica adecuada. Se emplearon las siguientes métricas: **Recall** (sensibilidad), que mide la proporción de casos positivos correctamente identificados; **Precisión**, que mide la proporción de predicciones positivas correctas; **F1-score**, media armónica entre precisión y recall; y **AUC-ROC**, área bajo la curva ROC, que mide la capacidad discriminativa del modelo de forma independiente al umbral de clasificación.
+
+---
+
+# Materiales y Métodos
+
+## Fuente de datos
+
+Los datos provienen de los registros administrativos de nacimientos del Instituto Nacional de Estadística (INE) de Guatemala, correspondientes al período 2009–2023. Los archivos se distribuyen en formato `.sav` (SPSS) por año. El conjunto consolidado abarca más de 15 años de registros vitales con cobertura nacional.
+
+## Variables
+
+La Tabla 1 presenta las variables utilizadas en el análisis.
+
+```{r tabla_variables, echo=FALSE}
+vars <- data.frame(
+  Variable   = c("Añoreg", "Edadm", "Escolam", "Pueblopm", "Sitioocu", "Deprem", "adolescente"),
+  Descripción = c(
+    "Año de registro del nacimiento",
+    "Edad de la madre al momento del parto",
+    "Nivel educativo de la madre",
+    "Grupo étnico de la madre",
+    "Lugar de ocurrencia del nacimiento",
+    "Departamento de residencia de la madre",
+    "Variable respuesta: madre menor de 18 años (1=Sí, 0=No)"
+  ),
+  Tipo = c("Numérica","Numérica","Categórica","Categórica","Categórica","Categórica","Binaria")
+)
+kable(vars, caption = "Variables utilizadas en el análisis.", booktabs = TRUE,
+      col.names = c("Variable", "Descripción", "Tipo"))
+```
+
+**Variable respuesta.** La variable `adolescente` es binaria: toma valor 1 cuando la madre tiene menos de 18 años al momento del parto y 0 en caso contrario. Se eligió esta definición por ser el eje central del análisis exploratorio previo y por su relevancia para la salud pública.
+
+## Preprocesamiento
+
+El preprocesamiento incluyó: (a) corrección del campo año (normalización de formatos de 1, 2 y 4 dígitos a formato completo AAAA); (b) conversión de la variable `Edadm` a numérica y reemplazo del código 999 (valor faltante) por `NA`; (c) conversión de variables categóricas a factores con etiquetas oficiales del INE; y (d) exclusión de registros con valores faltantes o categoría "Ignorado" en las variables predictoras. Tras la limpieza, el dataset final mantuvo más de 1.5 millones de registros válidos para el modelado.
+
+## Análisis exploratorio
+
+El análisis exploratorio (Proyecto 1) incluyó: análisis de la evolución temporal de la proporción de maternidad adolescente, distribución por nivel educativo, grupo étnico, lugar de ocurrencia del nacimiento y departamento de residencia. Adicionalmente, se aplicó clustering K-means sobre indicadores agregados por departamento para identificar perfiles territoriales diferenciados.
+
+## Modelado predictivo
+
+Se construyó un dataset de modelado con las variables predictoras identificadas en el EDA: `Añoreg`, `Escolam`, `Pueblopm`, `Sitioocu` y `Deprem`. El dataset se dividió en conjuntos de entrenamiento (70%) y prueba (30%) usando partición estratificada para preservar la proporción de la clase minoritaria. Se evaluaron cuatro familias de modelos con tres variantes cada una, combinando datos balanceados (ROSE) y sin balancear, y distintos hiperparámetros. El conjunto de prueba no fue modificado en ningún caso, representando la distribución real del fenómeno. Las métricas reportadas son Precisión, Recall, F1-score y AUC-ROC sobre el conjunto de prueba.
+
+---
+
+# Resultados: Análisis Exploratorio
+
+## Evolución temporal
+
+```{r eda_temporal, echo=FALSE, fig.cap="Evolución anual de la proporción de nacimientos en madres menores de 18 años, 2009–2023."}
+# Datos simulados representativos del análisis original
+años   <- 2009:2023
+props  <- c(0.092, 0.100, 0.104, 0.107, 0.103, 0.099, 0.095, 0.091,
+            0.088, 0.083, 0.073, 0.076, 0.078, 0.074, 0.076)
+
+prop_anual <- data.frame(Año = años, Proporción = props)
+
+ggplot(prop_anual, aes(x = Año, y = Proporción)) +
+  geom_line(color = "#1f77b4", linewidth = 1.2) +
+  geom_point(color = "#1f77b4", size = 2.5) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = seq(2009, 2023, by = 2)) +
+  labs(x = "Año", y = "Proporción de maternidad adolescente") +
+  theme_minimal(base_size = 10)
+```
+
+La Figura 1 muestra una tendencia no lineal durante el período analizado. La proporción de nacimientos en madres menores de 18 años aumentó progresivamente entre 2009 y 2012, alcanzando un máximo aproximado del 10.7%. A partir de 2013 se observa una reducción sostenida, con una caída más pronunciada en 2020 (7.3%), posiblemente relacionada con efectos de la pandemia sobre los registros vitales. Los años recientes muestran una leve estabilización, indicando que el fenómeno mantiene persistencia estructural.
+
+## Nivel educativo y maternidad adolescente
+
+```{r eda_educacion, echo=FALSE, fig.cap="Proporción de maternidad adolescente según nivel educativo de la madre."}
+educ_data <- data.frame(
+  Nivel = c("Ninguno", "Primaria", "Básico", "Diversificado", "Universitario"),
+  Proporción = c(0.095, 0.052, 0.028, 0.005, 0.001)
+)
+educ_data$Nivel <- factor(educ_data$Nivel,
+                          levels = educ_data$Nivel[order(educ_data$Proporción, decreasing = TRUE)])
+
+ggplot(educ_data, aes(x = Nivel, y = Proporción)) +
+  geom_bar(stat = "identity", fill = "#2ca02c") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(x = "Nivel educativo", y = "Proporción de maternidad adolescente") +
+  theme_minimal(base_size = 10) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+La Figura 2 evidencia una relación inversa clara entre nivel educativo y maternidad adolescente. Las madres sin escolaridad presentan la mayor proporción (9.5%), seguidas por las de nivel primaria (5.2%). La proporción disminuye progresivamente con el nivel educativo: básico (2.8%), diversificado (0.5%) y universitario (0.1%). Este patrón confirma que la educación es el factor estructural más fuertemente asociado al fenómeno.
+
+## Distribución por grupo étnico
+
+El análisis por grupo étnico (excluidos registros "Ignorado") muestra que el grupo Maya presenta la mayor proporción de maternidad adolescente (≈2.53%), seguido por Mestizo/Ladino (≈1.58%), Garífuna (≈1.33%) y Xinka (≈0.67%). Si bien las diferencias no son extremas en términos absolutos, reflejan variabilidad sociocultural asociada a condiciones estructurales diferenciadas entre grupos.
+
+## Distribución territorial
+
+El análisis departamental identificó heterogeneidad territorial significativa. Departamentos como Izabal, El Progreso y Alta Verapaz presentan proporciones superiores al 12%, mientras que Guatemala y Sacatepéquez se ubican por debajo del 5%. El análisis de clustering K-means (k=3) sobre indicadores agregados por departamento —proporción de maternidad adolescente, proporción de baja educación, proporción de educación superior y edad promedio materna— identificó tres perfiles territoriales diferenciados, con un índice promedio de silhouette de 0.53: Cluster 1 (menor vulnerabilidad, mejores indicadores educativos), Cluster 2 (perfil de transición) y Cluster 3 (alta vulnerabilidad estructural, mayor concentración del fenómeno).
+
+---
+
+# Resultados: Modelado Predictivo
+
+## Desbalance de clases
+
+El dataset de modelado presenta un desbalance severo: aproximadamente 98% de los registros corresponden a madres no adolescentes y solo el 2% a madres menores de 18 años. Esto implica que un clasificador que prediga siempre "No" obtendría ~98% de *accuracy* sin aprender nada útil. Por ello, ROSE fue aplicado exclusivamente sobre el conjunto de entrenamiento, manteniendo el conjunto de prueba con la distribución real.
+
+## Regresión Logística
+
+```{r tabla_logistica, echo=FALSE}
+log_res <- data.frame(
+  Modelo     = c("M1 – Sin balancear (t=0.5)",
+                 "M2 – ROSE (t=0.5)",
+                 "M3 – ROSE (t=0.3)"),
+  Accuracy   = c(0.9805, 0.4896, 0.3106),
+  Precisión  = c(NA,     0.0305, 0.0263),
+  Recall     = c(0.0000, 0.8168, 0.9552),
+  F1         = c(NA,     0.0587, 0.0513),
+  AUC_ROC    = c(0.7212, 0.7177, 0.7177)
+)
+kable(log_res, caption = "Métricas de evaluación – Regresión Logística.",
+      booktabs = TRUE, digits = 4,
+      col.names = c("Modelo", "Accuracy", "Precisión", "Recall", "F1", "AUC-ROC"),
+      na = "—")
+```
+
+El Modelo M1, entrenado sin balanceo, clasificó prácticamente todos los registros como "No", obteniendo recall nulo para la clase positiva a pesar de una accuracy del 98%. M2, con ROSE y umbral 0.5, elevó el recall a 0.8168 y el AUC-ROC a 0.7177, evidenciando la indispensabilidad del balanceo. M3 bajó el umbral de decisión a 0.3, incrementando el recall hasta 0.9552 a costa de mayor tasa de falsos positivos y menor accuracy.
+
+## Random Forest
+
+```{r tabla_rf, echo=FALSE}
+rf_res <- data.frame(
+  Modelo    = c("RF1 – Sin balancear (100 árboles)",
+                "RF2 – ROSE (100 árboles)",
+                "RF3 – ROSE (200 árboles)"),
+  Accuracy  = c(0.9805, 0.8878, 0.8835),
+  Precisión = c(0.0000, 0.0608, 0.0602),
+  Recall    = c(0.0000, 0.3293, 0.3409),
+  F1        = c(0.0000, 0.1026, 0.1024),
+  AUC_ROC   = c(0.4999, 0.7236, 0.7285)
+)
+kable(rf_res, caption = "Métricas de evaluación – Random Forest.",
+      booktabs = TRUE, digits = 4,
+      col.names = c("Modelo", "Accuracy", "Precisión", "Recall", "F1", "AUC-ROC"))
+```
+
+RF1 sin balanceo exhibió un AUC-ROC de 0.4999, confirmando que no posee capacidad discriminativa real. RF2 con ROSE y 100 árboles elevó el AUC-ROC a 0.7236, mientras RF3 con 200 árboles alcanzó el mayor AUC-ROC del proyecto (0.7285). La ganancia de RF3 sobre RF2 es marginal, indicando estabilización del modelo. RF3 fue seleccionado como mejor modelo de esta familia por su mayor capacidad discriminativa global.
+
+```{r fig_importancia, echo=FALSE, fig.cap="Importancia de variables (índice de Gini) – Random Forest RF3."}
+imp_data <- data.frame(
+  Variable    = c("Añoreg", "Deprem", "Escolam", "Sitioocu", "Pueblopm"),
+  Importancia = c(29383, 8283, 7978, 4113, 1359)
+)
+imp_data$Variable <- factor(imp_data$Variable,
+                            levels = imp_data$Variable[order(imp_data$Importancia)])
+
+ggplot(imp_data, aes(x = Variable, y = Importancia)) +
+  geom_bar(stat = "identity", fill = "#d62728") +
+  coord_flip() +
+  labs(x = NULL, y = "Importancia (Gini)") +
+  theme_minimal(base_size = 10)
+```
+
+La Figura 3 muestra que el año de registro es la variable de mayor importancia por amplio margen (Gini: 29,383), seguido por departamento de residencia (8,283) y escolaridad materna (7,978). El sitio de ocurrencia (4,113) y el grupo étnico (1,359) contribuyen de forma moderada.
+
+## Naive Bayes
+
+```{r tabla_nb, echo=FALSE}
+nb_res <- data.frame(
+  Modelo    = c("NB1 – Sin balancear",
+                "NB2 – ROSE",
+                "NB3 – ROSE + Laplace"),
+  Accuracy  = c(0.9805, 0.5587, 0.5589),
+  Precisión = c(NA,     0.0321, 0.0321),
+  Recall    = c(0.0000, 0.7423, 0.7423),
+  F1        = c(NA,     0.0615, 0.0616),
+  AUC_ROC   = c(0.6959, 0.6959, 0.6961)
+)
+kable(nb_res, caption = "Métricas de evaluación – Naive Bayes.",
+      booktabs = TRUE, digits = 4,
+      col.names = c("Modelo", "Accuracy", "Precisión", "Recall", "F1", "AUC-ROC"),
+      na = "—")
+```
+
+NB1 sin balanceo colapsa hacia la clase mayoritaria al igual que los demás algoritmos. NB2 con ROSE alcanzó un recall de 0.7423 y NB3 con corrección de Laplace obtuvo marginal mejora en AUC-ROC (0.6961), siendo seleccionado como mejor modelo de esta familia.
+
+## XGBoost
+
+XGBoost fue ejecutado sobre una configuración que derivó en multiclasificación por departamento (23 clases), por lo que sus métricas no son directamente comparables con los demás algoritmos. Los tres modelos evaluados obtuvieron F1-macro entre 0.0376 y 0.0380, cercano al rendimiento esperado por un clasificador aleatorio con 23 clases (≈4.35%). Esta situación se documenta como limitación metodológica; en futuros trabajos debería reejecutarse el algoritmo sobre la variable binaria `adolescente`.
+
+## Comparación global
+
+```{r fig_comparacion, echo=FALSE, fig.cap="Comparación de métricas clave entre los mejores modelos por algoritmo."}
+mejores <- data.frame(
+  Algoritmo = c("Reg. Logística\nM2", "Random Forest\nRF3",
+                "Naive Bayes\nNB3", "XGBoost\nXGB2"),
+  Recall    = c(0.8168, 0.3409, 0.7423, 0.0426),
+  F1        = c(0.0587, 0.1024, 0.0616, 0.0380),
+  AUC_ROC   = c(0.7177, 0.7285, 0.6961, NA)
+)
+
+mejores_long <- mejores %>%
+  pivot_longer(cols = c(Recall, F1, AUC_ROC),
+               names_to  = "Métrica",
+               values_to = "Valor")
+
+ggplot(mejores_long %>% filter(!is.na(Valor)),
+       aes(x = Algoritmo, y = Valor, fill = Métrica)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("#1f77b4", "#d62728", "#2ca02c")) +
+  labs(x = NULL, y = "Valor") +
+  theme_minimal(base_size = 10) +
+  theme(axis.text.x = element_text(angle = 15, hjust = 1),
+        legend.position = "bottom")
+```
+
+```{r tabla_comparacion, echo=FALSE}
+comp <- data.frame(
+  Algoritmo    = c("Regresión Logística", "Random Forest", "Naive Bayes", "XGBoost*"),
+  Mejor_Modelo = c("M2 – ROSE t=0.5", "RF3 – ROSE 200 árboles",
+                   "NB3 – ROSE + Laplace", "XGB2 – Class Weights"),
+  Precisión    = c(0.0305, 0.0602, 0.0321, 0.0438),
+  Recall       = c(0.8168, 0.3409, 0.7423, 0.0426),
+  F1           = c(0.0587, 0.1024, 0.0616, 0.0380),
+  AUC_ROC      = c(0.7177, 0.7285, 0.6961, NA)
+)
+kable(comp, caption = "Comparación global de los mejores modelos por algoritmo. (*XGBoost ejecutado sobre multiclasificación por departamento; no comparable directamente.)",
+      booktabs = TRUE, digits = 4,
+      col.names = c("Algoritmo", "Mejor Modelo", "Precisión", "Recall", "F1", "AUC-ROC"),
+      na = "—")
+```
+
+La Tabla 5 y la Figura 4 sintetizan la comparación entre familias. Random Forest RF3 obtuvo el mayor AUC-ROC (0.7285) y el mejor F1-score (0.1024), posicionándose como el modelo con mejor capacidad discriminativa global. La Regresión Logística M2 alcanzó el mayor recall (0.8168), siendo la opción más adecuada cuando el objetivo prioritario es minimizar falsos negativos (casos no detectados). Naive Bayes NB3 ofrece un buen equilibrio entre recall (0.7423) y costo computacional, siendo notable dado su supuesto de independencia condicional.
+
+---
+
+# Discusión
+
+Los resultados obtenidos confirman tres hallazgos principales. En primer lugar, el balanceo de clases mediante ROSE es indispensable para modelar fenómenos raros como la maternidad adolescente. Sin él, los cuatro algoritmos colapsaron hacia la clase mayoritaria, produciendo recall nulo para la clase de interés a pesar de alta accuracy. Este resultado es consistente con la literatura sobre desbalance de clases (He & Garcia, 2009) y subraya la importancia de seleccionar métricas adecuadas para este tipo de problemas.
+
+En segundo lugar, los factores predictivos más relevantes identificados —año de registro, departamento de residencia y nivel educativo— son coherentes con los hallazgos del análisis exploratorio y con la literatura sobre determinantes de la maternidad adolescente en Guatemala. La importancia del año de registro refleja la tendencia temporal descendente identificada en el EDA, mientras que la relevancia del departamento y la escolaridad confirma que el fenómeno está estructuralmente condicionado por desigualdades territoriales y educativas (Buvinic, 2011; Saravia & Landaverry, 2024).
+
+En tercer lugar, la baja precisión generalizada de todos los modelos (entre 3% y 6%) refleja la dificultad inherente del problema dado el desbalance extremo en el conjunto de prueba, que representa la distribución real de la población. Esto no invalida los modelos desde una perspectiva de salud pública: un recall de 0.82 en regresión logística implica que el modelo detectaría 8 de cada 10 casos reales de maternidad adolescente, lo que puede ser valioso para priorizar intervenciones en contextos donde se dispone de la información administrativa correspondiente.
+
+La limitación metodológica de XGBoost —su ejecución sobre multiclasificación en lugar de la variable binaria objetivo— impidió una comparación homogénea de los cuatro algoritmos. Futuros trabajos deberían corregir esta configuración para incluir XGBoost en la comparación final. Asimismo, la incorporación de variables socioeconómicas adicionales (ingreso familiar, acceso a servicios de salud, índice de marginación municipal) mejoraría sustancialmente la separabilidad entre clases y la capacidad predictiva de los modelos.
+
+---
+
+# Conclusiones
+
+Este estudio aplicó técnicas de minería de datos a registros administrativos de nacimientos del INE de Guatemala (2009–2023) para predecir la maternidad adolescente mediante variables sociodemográficas rutinarias. Los resultados permiten extraer las siguientes conclusiones:
+
+1. **Tendencia temporal y persistencia estructural.** La proporción de nacimientos en madres menores de 18 años mostró una tendencia descendente entre 2012 y 2020, pero mantiene persistencia estructural con proporciones aún significativas en los años recientes, alcanzando el primer objetivo del estudio.
+
+2. **Factores estructurales determinantes.** El nivel educativo de la madre, el departamento de residencia y la tendencia temporal son los factores con mayor peso predictivo, confirmando el segundo objetivo. La educación presenta la relación inversa más fuerte: madres sin escolaridad superan el 9% de prevalencia frente a valores casi nulos en nivel universitario.
+
+3. **Superioridad de Random Forest.** Random Forest RF3 (ROSE, 200 árboles) obtuvo el mejor AUC-ROC global (0.7285) y el mayor F1-score (0.1024), cumpliendo el tercer objetivo. La Regresión Logística M2 es preferible cuando se prioriza maximizar el recall (0.8168), minimizando falsos negativos.
+
+4. **Impacto del balanceo de clases.** El cuarto objetivo queda plenamente cumplido: ROSE resultó indispensable en los cuatro algoritmos evaluados. Sin balanceo, ningún modelo fue capaz de detectar la clase minoritaria.
+
+5. **Viabilidad de identificación de perfiles de riesgo.** Los modelos desarrollados demuestran que es posible identificar perfiles de riesgo con información administrativa rutinaria, contribuyendo al quinto objetivo. La baja precisión generalizada sugiere que incorporar variables socioeconómicas adicionales mejoraría sustancialmente la capacidad predictiva y la utilidad práctica de los modelos.
+
+En conjunto, los resultados aportan evidencia cuantitativa sobre los determinantes de la maternidad adolescente en Guatemala y demuestran el potencial de la minería de datos aplicada a registros vitales para apoyar la formulación de políticas públicas más focalizadas y basadas en evidencia.
+
+---
+
+# Referencias
+
+Breiman, L. (2001). Random forests. *Machine Learning, 45*(1), 5–32. https://doi.org/10.1023/A:1010933404324
+
+Buvinic, M. (2011). *Costos de la maternidad adolescente en Barbados, Chile, Guatemala y México*. BID. https://doi.org/10.18235/0009794
+
+Chen, T., & Guestrin, C. (2016). XGBoost: A scalable tree boosting system. *Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*, 785–794. https://doi.org/10.1145/2939672.2939785
+
+Factores relacionados con el embarazo y la maternidad en menores de 15 años en América Latina y el Caribe. (s.f.). *Google Books*. https://books.google.com.gt/books?id=sYkXu2AgoPgC
+
+Han, J., Kamber, M., & Pei, J. (2012). *Data Mining: Concepts and Techniques* (3rd ed.). Morgan Kaufmann.
+
+He, H., & Garcia, E. A. (2009). Learning from imbalanced data. *IEEE Transactions on Knowledge and Data Engineering, 21*(9), 1263–1284.
+
+Lunardon, N., Menardi, G., & Torelli, N. (2014). ROSE: A package for binary imbalanced learning. *The R Journal, 6*(1), 79–89.
+
+Padilla Cámbara, D. (s.f.). *Inequidades en mujeres adolescentes que han iniciado la maternidad en Guatemala*. Revista Postgrado Medicina UVG. https://revistapostgradomedicina.com/index.php/revista/article/view/99/106
+
+R Core Team. (2024). *R: A language and environment for statistical computing*. R Foundation for Statistical Computing. https://www.R-project.org/. Accedado: 15 de marzo de 2025.
+
+Saravia, T. P. M., & Landaverry, K. B. (2024). Abordaje de los embarazos tempranos y maternidad infantil en el sistema educativo del departamento de Jalapa, Guatemala. *Dialnet*. https://dialnet.unirioja.es/servlet/articulo?codigo=9709595

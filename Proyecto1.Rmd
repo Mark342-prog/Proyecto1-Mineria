@@ -3,8 +3,8 @@ title: "Proyecto 1 – Maternidad Adolescente en Guatemala (2009–2023)"
 author: "Grupo 6"
 date: "`r Sys.Date()`"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}

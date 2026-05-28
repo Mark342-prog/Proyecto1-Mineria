@@ -97,3 +97,4 @@ datos_unidos <- datos_unidos[, porcentaje_na < 0.8]
 
 numericas <- datos_unidos %>% select(where(is.numeric))
 categoricas <- datos_unidos %>% select(where(~!is.numeric(.)))
+```
